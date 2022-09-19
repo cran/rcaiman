@@ -4,95 +4,67 @@
 \alias{fit_coneshaped_model}
 \title{Fit cone-shaped model}
 \usage{
-fit_coneshaped_model(
-  r,
-  z,
-  a,
-  bin,
-  prob = 0.95,
-  filling_source = NULL,
-  use_azimuth_angle = TRUE,
-  parallel = TRUE,
-  free_cores = 0
-)
+fit_coneshaped_model(sky_points, use_azimuth_angle = TRUE)
 }
 \arguments{
-\item{r}{\linkS4class{RasterLayer}. A normalized greyscale image. Typically,
-the blue channel extracted from an hemispherical photograph. Please see
-\code{\link{read_caim}} and \code{\link{normalize}}.}
+\item{sky_points}{The \emph{data.frame} returned by \code{\link{extract_rl}}
+or a \emph{data.frame} with same structure and names.}
 
-\item{z}{\linkS4class{RasterLayer}. The result of a call to
-\code{\link{zenith_image}}.}
-
-\item{a}{\linkS4class{RasterLayer}. The result of a call to
-\code{\link{azimuth_image}}.}
-
-\item{bin}{\linkS4class{RasterLayer}. A working binarized image. This should
-be a preliminary binarization of \code{r}. If the function returns
-\code{NA}, then the quality of this input should be revised.}
-
-\item{prob}{Logical vector of length one. Probability for
-\code{\link[stats]{quantile}} calculation. See reference
-\insertCite{Diaz2018;textual}{rcaiman}.}
-
-\item{filling_source}{\linkS4class{RasterLayer}. Default is \code{NULL}.
-Above-canopy photograph. This image should contain pixels with sky DN
-values and \code{NA} in all the other pixels. A photograph taken
-immediately after or before taking \code{r} under the open sky with the
-same equipment and configuration is a very good option. The ideal option is
-one taken at the same time and place but above the canopy. The orientation
-relative to the North must be the same than for \code{r}.}
-
-\item{use_azimuth_angle}{Logical vector of length one. If \code{TRUE},
-Equation 4 from \insertCite{Diaz2018;textual}{rcaiman} is used: \eqn{sDN =
+\item{use_azimuth_angle}{Logical vector of length one. If \code{TRUE}, the
+Equation 4 from \insertCite{Diaz2018;textual}{rcaiman}) is used: \eqn{sDN =
 a + b \cdot \theta + c  \cdot \theta^2 + d  \cdot sin(\phi) + e  \cdot
 cos(\phi)}, where \eqn{sDN} is sky digital number, \eqn{a,b,c,d} and
 \eqn{e} are coefficients, \eqn{\theta} is zenith angle, and \eqn{\phi} is
-azimuth angle. If \code{FALSE}, a simplified version based on
+azimuth angle. If \code{FALSE}, the next simplified version based on
 \insertCite{Wagner2001;textual}{rcaiman} is used: \eqn{sDN = a + b \cdot
 \theta + c  \cdot \theta^2}.}
-
-\item{parallel}{Logical vector of length one. Allows parallel processing.}
-
-\item{free_cores}{Numeric vector of length one. This number is subtracted to
-the number of cores detected by \code{\link[parallel]{detectCores}}.}
 }
 \value{
-A list with two objects, one of class \linkS4class{RasterLayer} and
-  the other of class \code{lm} (see \code{\link[stats]{lm}}).
+A list of two objects, one of class \code{function} and the other of
+  class \code{lm} (see \code{\link[stats]{lm}}). If the fitting fails, it
+  returns \code{NULL}. The function requires two arguments--zenith and
+  azimuth in degrees--to return relative luminance.
 }
 \description{
-Generate the digital numbers of the whole sky through statistical modelling.
+Statistical modeling to predict the digital numbers from spherical
+coordinates.
 }
 \details{
-An explanation of this function can be found on
+An explanation of this model can be found on
 \insertCite{Diaz2018;textual}{rcaiman}, under the heading \emph{Estimation of
 the sky DN as a previous step for our method}.
 
 If you use this function in your research, please cite
-\insertCite{Diaz2018}{rcaiman}.
+\insertCite{Diaz2018;textual}{rcaiman} in addition to this package.
 }
 \examples{
 \dontrun{
-path <- system.file("external/4_D_2_DSCN4502.JPG", package = "rcaiman")
-r <- read_caim(path, c(1280, 960) - 745, 745 * 2, 745 * 2)
-z <- zenith_image(ncol(r), lens("Nikon_FCE9"))
+path <- system.file("external/DSCN4500.JPG", package = "rcaiman")
+caim <- read_caim(path, c(1280, 960) - 745, 745 * 2, 745 * 2)
+z <- zenith_image(ncol(caim), lens("Nikon_FCE9"))
 a <- azimuth_image(z)
-blue <- gbc(r$Blue)
-bin <- find_sky_pixels(blue, z, a)
-sky <- fit_coneshaped_model(blue, z, a, bin, parallel = FALSE)
-plot(sky$image)
-persp(sky$image, theta = 90, phi = 0) #a flipped rounded cone!
+r <- gbc(caim$Blue)
+g <- sky_grid_segmentation(z, a, 10)
+bin <- find_sky_pixels(r, z, a)
+sky_points <- extract_sky_points(r, bin, g)
+sky_points <- extract_rl(r, z, a, sky_points, NULL)
+model <- fit_coneshaped_model(sky_points$sky_points)
+sky_cs <- model$fun(z, a)
+persp(sky_cs, theta = 90, phi = 0) #a flipped rounded cone!
 }
 }
 \references{
 \insertAllCited{}
 }
 \seealso{
-Other MBLT functions: 
-\code{\link{find_sky_pixels}()},
+\code{\link{thr_image}}
+
+Other Sky Reconstruction Functions: 
+\code{\link{cie_sky_model_raster}()},
+\code{\link{fit_cie_sky_model}()},
 \code{\link{fit_trend_surface}()},
-\code{\link{ootb_mblt}()},
-\code{\link{thr_image}()}
+\code{\link{fix_reconstructed_sky}()},
+\code{\link{interpolate_sky_points}()},
+\code{\link{ootb_sky_reconstruction}()}
 }
-\concept{MBLT functions}
+\concept{Sky Reconstruction Functions}

@@ -1,28 +1,30 @@
 #' Read binarized images
 #'
-#' Wrapper functions for \code{\link[raster]{raster}}.
+#' Wrapper functions for \code{\link[terra]{rast}}.
 #'
-#' @param path One-length character vector. Path to read or a binarized image.
+#' @param path Character vector of length one. Path to a binarized image.
 #'
 #' @export
 #'
-#' @return An object from class \linkS4class{RasterLayer}.
+#' @return An object from class \linkS4class{SpatRaster}.
 #'
-#' @seealso \code{\link{write_bin}}
-#' @family Tools functions
+#' @family Tool Functions
 #'
 #' @examples
 #' \dontrun{
 #' z <- zenith_image(1000, lens())
 #' m <- !is.na(z)
-#' my_file <- file.path(tmpDir(), "mask.tif")
+#' my_file <- file.path(tempdir(), "mask.tif")
 #' write_bin(m, my_file)
 #' m_from_disk <- read_bin(my_file)
 #' plot(m - m_from_disk)
 #' }
 read_bin <- function(path) {
-  r <- raster(path)
+  r <- rast(path)
+  terra::ext(r) <- terra::ext(0, ncol(r), 0, nrow(r))
+  # https://spatialreference.org/ref/sr-org/7589/
+  terra::crs(r) <- "epsg:7589"
   r <- is.na(r)
-  if (stats::sd(r[]) == 0) r <- raster(path)
-  r
+  if (stats::sd(r[]) == 0) r <- rast(path)
+  as.logical(r)
 }

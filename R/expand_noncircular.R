@@ -2,60 +2,89 @@
 #'
 #' Expand a non-circular hemispherical photograph.
 #'
-#' @param caim \linkS4class{RasterBrick}. The return of a call to
+#' @param caim \linkS4class{SpatRaster}. The return of a call to
 #'   \code{\link{read_caim}}.
-#' @inheritParams azimuth_image
+#' @inheritParams ootb_mblt
 #' @param zenith_colrow Numeric vector of length two. Raster coordinates of the
-#'   zenith. See \code{\link{calc_zenith_raster_coordinates}}.
+#'   zenith. See \code{\link{calc_zenith_raster_coord}}.
 #'
-#' @family Lens functions
+#' @family Lens Functions
 #'
-#' @return An object of class \linkS4class{RasterBrick} that is the result of
-#'   copying the pixels from \code{caim} and adding margins of \code{NA} pixel
-#'   values. The zenith point depicted in the picture should be in the center of
-#'   the image or very close to it.
+#' @return An object of class \linkS4class{SpatRaster} that is the result of
+#'   adding margins (\code{NA} pixels) to \code{caim}. The zenith point depicted
+#'   in the picture should be in the center of the image or very close to it.
 #'
 #' @export
 #'
 #' @examples
 #' \dontrun{
-#'    my_file <- file.path(tmpDir(), "DSC_2881.JPG")
-#'    download.file("https://osf.io/x8urg/download", my_file,
-#'                method = "auto", mode = "wb"
-#'    )
+#'  #noncircular fisheye from a DSLR camera
+#'  my_file <- file.path(tempdir(), "DSC_2881.JPG")
+#'  download.file("https://osf.io/x8urg/download", my_file,
+#'              method = "auto", mode = "wb"
+#'  )
 #'
-#'    r <- read_caim(my_file)
-#'    diameter <- calc_diameter(lens("Nikkor_10.5_mm"), 1202, 53)
-#'    zenith_colrow <- c(1503, 998)
-#'    z <- zenith_image(diameter, lens("Nikkor_10.5_mm"))
-#'    r <- expand_noncircular(r, z, zenith_colrow)
-#'    plot(r)
+#'  r <- read_caim(my_file)
+#'  diameter <- calc_diameter(lens("Nikkor_10.5_mm"), 1202, 53)
+#'  zenith_colrow <- c(1503, 998)
+#'  z <- zenith_image(diameter, lens("Nikkor_10.5_mm"))
+#'  r <- expand_noncircular(r, z, zenith_colrow)
+#'  plot(r, col = seq(0,1,1/255) %>% grey())
+#'  plot(is.na(r$Red), add = TRUE, alpha = 0.3,legend = FALSE)
+#'
+#'  #noncircular fisheye from a smartphone with an auxiliary lens
+#'  path <- system.file("external/APC_0581.jpg", package = "rcaiman")
+#'  caim <- read_caim(path)
+#'  z <- zenith_image(2132/2, lens("Olloclip"))
+#'  a <- azimuth_image(z)
+#'  zenith_colrow <- c(1063, 771)/2
+#'  caim <- expand_noncircular(caim, z, zenith_colrow)
+#'  plot(caim$Blue, col = seq(0,1,1/255) %>% grey())
+#'  m <- !is.na(caim$Red) & !is.na(z)
+#'  plot(m, add = TRUE, alpha = 0.3, legend = FALSE)
+#'
+#'  #restricted view canopy photo
+#'  path <- system.file("external/APC_0020.jpg", package = "rcaiman")
+#'  caim <- read_caim(path)
+#'  plot(caim)
+#'  caim <- normalize(caim)
+#'  diameter <- calc_diameter(lens(), sqrt(nrow(caim)^2 + ncol(caim)^2)/2, 90)
+#'  z <- zenith_image(diameter, lens())
+#'  caim <- expand_noncircular(caim, z, c(ncol(caim)/2, nrow(caim)/2))
+#'  m <- !is.na(caim$Red)
+#'  a <- azimuth_image(z)
+#'  caim[!m] <- 0
+#'  z <- normalize(z, 0, 90) * 20 # a diagonal FOV of 40 degrees
+#'  plot(caim$Blue, col = seq(0,1,1/255) %>% grey())
+#'  m <- !is.na(caim$Red) & !is.na(z)
+#'  plot(m, add = TRUE, alpha = 0.3, legend = FALSE)
 #' }
 expand_noncircular <-  function (caim, z, zenith_colrow) {
-  stopifnot(class(z) == "RasterLayer")
+  .is_single_layer_raster(z, "z")
   stopifnot(class(zenith_colrow) == "numeric")
   stopifnot(length(zenith_colrow) == 2)
 
   zenith_xy <- c(zenith_colrow[1], nrow(caim) - zenith_colrow[2])
-  delta_x <-  (ncol(caim) / 2) - zenith_xy[1]
-  delta_y <-  (nrow(caim) / 2) - zenith_xy[2]
+  delta_x <-  zenith_xy[1] - (ncol(caim) / 2)
+  delta_y <-  zenith_xy[2] - (nrow(caim) / 2)
+  #In which quadrant is the zenith?
+  # (-)(+)|(+)(+)
+  #----------------
+  # (-)(-)|(+)(-)
+  #
   center <- ncol(z) / 2
-  if (ncol(caim) > nrow(caim)) {
-    xmn <- center - (ncol(caim)/2) - delta_x
-    xmx <- center + (ncol(caim)/2) - delta_x
-  } else {
-    xmn <- center - (ncol(caim)/2) + delta_x
-    xmx <- center + (ncol(caim)/2) + delta_x
-  }
-  ymn <- center - (nrow(caim) / 2) + delta_y
-  ymx <- center + (nrow(caim) / 2) + delta_y
-  e <- extent(xmn, xmx, ymn, ymx)
-  extent(caim) <- e
+  xmn <- center - ((ncol(caim)/2) + delta_x)
+  xmx <- center + ((ncol(caim)/2) - delta_x)
+  ymn <- center - ((nrow(caim)/2) + delta_y)
+  ymx <- center + ((nrow(caim)/2) - delta_y)
+  e <- terra::ext(xmn, xmx, ymn, ymx)
+  r <- terra::deepcopy(caim)
+  terra::ext(r) <- e
 
-  ze <- extent(z) * 1.5
-  r <- extend(caim, z, value = NA)
-  extent(r) <- alignExtent(extent(r), z)
-  r <- crop(r, z)
-  extent(r) <- extent(0, ncol(r), 0, nrow(r))
+  # ze <- terra::ext(z) * 1.5
+  r <- terra::extend(r, z)
+  terra::ext(r) <- terra::align(terra::ext(r), z)
+  r <- terra::resample(r, z)
+  terra::ext(r) <- terra::ext(0, ncol(r), 0, nrow(r))
   r
 }

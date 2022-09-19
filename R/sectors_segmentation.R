@@ -1,17 +1,16 @@
 #' Sectors segmentation
 #'
-#' Segmenting an hemispherical view by slicing the azimuth angle from \code{0}
-#' to \code{360º} in equals intervals.
+#' Segmenting a hemispherical view by slicing the azimuth angle from zero
+#' to 360º in equals intervals.
 #'
-#' @param a \code{\linkS4class{RasterLayer}} built with
-#'   \code{\link{azimuth_image}}.
+#' @inheritParams ootb_mblt
 #' @inheritParams rings_segmentation
 #'
-#' @return An object from the class \linkS4class{RasterLayer} with segments
+#' @return An object from the class \linkS4class{SpatRaster} with segments
 #'   shaped like pizza slices.
 #' @export
 #'
-#' @family Segmentation functions
+#' @family Segmentation Functions
 #'
 #' @examples
 #' z <- zenith_image(1490, lens())
@@ -19,7 +18,8 @@
 #' sectors <- sectors_segmentation(a, 15)
 #' plot(sectors == 1)
 sectors_segmentation <- function(a, angle_width, return_angle = FALSE) {
-  stopifnot(class(a) == "RasterLayer")
+  .is_single_layer_raster(a, "a")
+  stopifnot(.get_max(a) <= 360)
   stopifnot(class(return_angle) == "logical")
   stopifnot(length(angle_width) == 1)
 
@@ -40,5 +40,8 @@ sectors_segmentation <- function(a, angle_width, return_angle = FALSE) {
   }
 
   rcl <- matrix(c(c1, c2, c3), ncol = 3)
-  reclassify(a, rcl)
+  sectors <- terra::classify(a, rcl)
+  sectors[is.na(sectors)] <- 0
+  names(sectors) <- "Sectors"
+  sectors
 }

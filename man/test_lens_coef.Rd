@@ -11,25 +11,26 @@ test_lens_coef(lens_coef)
 projection function.}
 }
 \value{
-Returns \code{invisible(TRUE)} if all tests pass, otherwise throws an
-  error.
+Returns \code{invisible(TRUE)} and print "Test passed" if all tests
+  pass, otherwise throws an error.
 }
 \description{
-Test that lens projection function works between the 0-to-1 range.
+Test if a lens projection function will work between the 0-to-1 range.
 }
 \examples{
 test_lens_coef(lens("Nikon_FCE9"))
 test_lens_coef(2 / pi)
 }
 \seealso{
-Other Lens functions: 
+Other Lens Functions: 
 \code{\link{azimuth_image}()},
 \code{\link{calc_diameter}()},
-\code{\link{calc_zenith_raster_coordinates}()},
+\code{\link{calc_zenith_raster_coord}()},
 \code{\link{calibrate_lens}()},
 \code{\link{expand_noncircular}()},
+\code{\link{fisheye_to_equidistant}()},
+\code{\link{fisheye_to_pano}()},
 \code{\link{lens}()},
-\code{\link{reproject_to_equidistant}()},
 \code{\link{zenith_image}()}
 }
-\concept{Lens functions}
+\concept{Lens Functions}

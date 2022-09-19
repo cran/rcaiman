@@ -7,48 +7,76 @@
 expand_noncircular(caim, z, zenith_colrow)
 }
 \arguments{
-\item{caim}{\linkS4class{RasterBrick}. The return of a call to
+\item{caim}{\linkS4class{SpatRaster}. The return of a call to
 \code{\link{read_caim}}.}
 
-\item{z}{\linkS4class{RasterLayer} built with
-\code{\link{zenith_image}}.}
+\item{z}{\linkS4class{SpatRaster} built with \code{\link{zenith_image}}.}
 
 \item{zenith_colrow}{Numeric vector of length two. Raster coordinates of the
-zenith. See \code{\link{calc_zenith_raster_coordinates}}.}
+zenith. See \code{\link{calc_zenith_raster_coord}}.}
 }
 \value{
-An object of class \linkS4class{RasterBrick} that is the result of
-  copying the pixels from \code{caim} and adding margins of \code{NA} pixel
-  values. The zenith point depicted in the picture should be in the center of
-  the image or very close to it.
+An object of class \linkS4class{SpatRaster} that is the result of
+  adding margins (\code{NA} pixels) to \code{caim}. The zenith point depicted
+  in the picture should be in the center of the image or very close to it.
 }
 \description{
 Expand a non-circular hemispherical photograph.
 }
 \examples{
 \dontrun{
-   my_file <- file.path(tmpDir(), "DSC_2881.JPG")
-   download.file("https://osf.io/x8urg/download", my_file,
-               method = "auto", mode = "wb"
-   )
+ #noncircular fisheye from a DSLR camera
+ my_file <- file.path(tempdir(), "DSC_2881.JPG")
+ download.file("https://osf.io/x8urg/download", my_file,
+             method = "auto", mode = "wb"
+ )
 
-   r <- read_caim(my_file)
-   diameter <- calc_diameter(lens("Nikkor_10.5_mm"), 1202, 53)
-   zenith_colrow <- c(1503, 998)
-   z <- zenith_image(diameter, lens("Nikkor_10.5_mm"))
-   r <- expand_noncircular(r, z, zenith_colrow)
-   plot(r)
+ r <- read_caim(my_file)
+ diameter <- calc_diameter(lens("Nikkor_10.5_mm"), 1202, 53)
+ zenith_colrow <- c(1503, 998)
+ z <- zenith_image(diameter, lens("Nikkor_10.5_mm"))
+ r <- expand_noncircular(r, z, zenith_colrow)
+ plot(r, col = seq(0,1,1/255) \%>\% grey())
+ plot(is.na(r$Red), add = TRUE, alpha = 0.3,legend = FALSE)
+
+ #noncircular fisheye from a smartphone with an auxiliary lens
+ path <- system.file("external/APC_0581.jpg", package = "rcaiman")
+ caim <- read_caim(path)
+ z <- zenith_image(2132/2, lens("Olloclip"))
+ a <- azimuth_image(z)
+ zenith_colrow <- c(1063, 771)/2
+ caim <- expand_noncircular(caim, z, zenith_colrow)
+ plot(caim$Blue, col = seq(0,1,1/255) \%>\% grey())
+ m <- !is.na(caim$Red) & !is.na(z)
+ plot(m, add = TRUE, alpha = 0.3, legend = FALSE)
+
+ #restricted view canopy photo
+ path <- system.file("external/APC_0020.jpg", package = "rcaiman")
+ caim <- read_caim(path)
+ plot(caim)
+ caim <- normalize(caim)
+ diameter <- calc_diameter(lens(), sqrt(nrow(caim)^2 + ncol(caim)^2)/2, 90)
+ z <- zenith_image(diameter, lens())
+ caim <- expand_noncircular(caim, z, c(ncol(caim)/2, nrow(caim)/2))
+ m <- !is.na(caim$Red)
+ a <- azimuth_image(z)
+ caim[!m] <- 0
+ z <- normalize(z, 0, 90) * 20 # a diagonal FOV of 40 degrees
+ plot(caim$Blue, col = seq(0,1,1/255) \%>\% grey())
+ m <- !is.na(caim$Red) & !is.na(z)
+ plot(m, add = TRUE, alpha = 0.3, legend = FALSE)
 }
 }
 \seealso{
-Other Lens functions: 
+Other Lens Functions: 
 \code{\link{azimuth_image}()},
 \code{\link{calc_diameter}()},
-\code{\link{calc_zenith_raster_coordinates}()},
+\code{\link{calc_zenith_raster_coord}()},
 \code{\link{calibrate_lens}()},
+\code{\link{fisheye_to_equidistant}()},
+\code{\link{fisheye_to_pano}()},
 \code{\link{lens}()},
-\code{\link{reproject_to_equidistant}()},
 \code{\link{test_lens_coef}()},
 \code{\link{zenith_image}()}
 }
-\concept{Lens functions}
+\concept{Lens Functions}

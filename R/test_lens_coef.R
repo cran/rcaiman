@@ -1,15 +1,15 @@
 #' Test lens projection functions
 #'
-#' Test that lens projection function works between the 0-to-1 range.
+#' Test if a lens projection function will work between the 0-to-1 range.
 #'
 #' @inheritParams zenith_image
 #'
-#' @family Lens functions
+#' @family Lens Functions
 #'
 #' @export
 #'
-#' @return Returns \code{invisible(TRUE)} if all tests pass, otherwise throws an
-#'   error.
+#' @return Returns \code{invisible(TRUE)} and print "Test passed" if all tests
+#'   pass, otherwise throws an error.
 #'
 #' @examples
 #' test_lens_coef(lens("Nikon_FCE9"))

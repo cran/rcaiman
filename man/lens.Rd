@@ -7,21 +7,35 @@
 lens(type = "equidistant", max_fov = FALSE)
 }
 \arguments{
-\item{type}{Character vector of length one. The name of the lens, see
-details.}
+\item{type}{Character vector of length one. The name of the lens.}
 
-\item{max_fov}{Logical. Use \code{TRUE} to return the maximum field of view
-in degrees.}
+\item{max_fov}{Logical vector of length one. Use \code{TRUE} to return the
+maximum field of view in degrees.}
 }
 \value{
 If \code{max_fov} is set to \code{TRUE}, it returns a numeric vector
-  of length one, which is the lens FOV in degrees. Otherwise, it returns a
-  numeric vector with the coefficient of the lens function.
+  of length one, which is the lens maximum field of view in degrees.
+  Otherwise, it returns a numeric vector with the coefficients of the lens
+  function.
 }
 \description{
 Database of lens projection functions and field of views.
 }
 \details{
+In upward-looking leveled hemispherical photography, the zenith is the center
+of a circle whose perimeter is the horizon. This is true only if the lens
+field of view is 180º. The relative radius is the radius of concentric
+circles expressed as a fraction of the radius that belongs to the circle that
+has the horizon as perimeter. The equidistant model, also called polar, is
+the most widely used as a standard reference. Real lenses can approximate the
+projection models, but they always have some kind of distortion. In the
+equidistant model, the relation between zenith angle and relative radius is
+modeled with a straight line. Following
+\href{https://www.schleppi.ch/patrick/hemisfer/}{Hemisfer software}, this
+package uses a polynomial curve to model lens distortion. A third-order
+polynomial is sufficient in most cases
+\insertCite{Frazer2001}{rcaiman}.
+
 Eventually, this will be a large database, but only the following lenses are
 available at the moment:
 
@@ -34,6 +48,8 @@ available at the moment:
 \item \strong{Nikkor_10.5_mm}: AF DX Fisheye-Nikkor 10.5mm f/2.8G ED
 \insertCite{Pekin2009}{rcaiman}
 
+\item \strong{Olloclip}: Auxiliary lens. Unpublished
+
 }
 }
 \examples{
@@ -44,14 +60,15 @@ lens("Nikon_FCE9", max_fov = TRUE)
 \insertAllCited{}
 }
 \seealso{
-Other Lens functions: 
+Other Lens Functions: 
 \code{\link{azimuth_image}()},
 \code{\link{calc_diameter}()},
-\code{\link{calc_zenith_raster_coordinates}()},
+\code{\link{calc_zenith_raster_coord}()},
 \code{\link{calibrate_lens}()},
 \code{\link{expand_noncircular}()},
-\code{\link{reproject_to_equidistant}()},
+\code{\link{fisheye_to_equidistant}()},
+\code{\link{fisheye_to_pano}()},
 \code{\link{test_lens_coef}()},
 \code{\link{zenith_image}()}
 }
-\concept{Lens functions}
+\concept{Lens Functions}

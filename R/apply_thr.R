@@ -2,25 +2,25 @@
 #'
 #' Global or local thresholding of images.
 #'
-#' It is a wrapper function around the operator \code{>} from the ‘raster’
-#' package. If a single threshold value is provided as \code{thr} argument, it
-#' is applied to every pixel of the raster object \code{r}. If instead a
-#' \linkS4class{RasterLayer} is provided, then a particular threshold is applied
-#' to each particular pixel.
+#' It is a wrapper function around the operator \code{>} from the ‘terra’
+#' package. If a single threshold value is provided as the \code{thr} argument,
+#' it is applied to every pixel of the object \code{r}. If, instead, a
+#' \linkS4class{SpatRaster} is provided as the \code{thr} argument, then a
+#' particular threshold is applied to each particular pixel.
 #'
-#' @param r \linkS4class{RasterLayer}
-#' @param thr Numeric vector of length one or \linkS4class{RasterLayer}.
+#' @param r \linkS4class{SpatRaster}. A greyscale image.
+#' @param thr Numeric vector of length one or \linkS4class{SpatRaster}.
 #'   Threshold.
 #'
-#' @return An object of class \linkS4class{RasterLayer} with values \code{0} and
+#' @return An object of class \linkS4class{SpatRaster} with values \code{0} and
 #'   \code{1}.
 #' @export
 #'
-#' @family Tools functions
+#' @family Binarization Functions
 #'
 #' @examples
 #' r <- read_caim()
-#' apply_thr(r$Blue, 120)
+#' apply_thr(r$Blue, thr_isodata(r$Blue[]))
 #' \dontrun{
 #' # This function is useful in combination with the ‘autothresholdr’
 #' # package. For example:
@@ -31,10 +31,10 @@
 #' }
 apply_thr <- function (r, thr)
 {
+  .is_single_layer_raster(r)
+  r[is.na(r)] <- 0
 
-  stopifnot(class(r) == "RasterLayer" )
-
-  if (any(class(thr) == "numeric", class(thr) == "integer")) {
+  if (any(is(thr, "numeric"), is(thr, "integer"))) {
     stopifnot(length(thr) == 1)
     tmp <- values(r)
     if (thr < min(tmp, na.rm = TRUE))
@@ -42,10 +42,9 @@ apply_thr <- function (r, thr)
     if (thr >= max(tmp, na.rm = TRUE))
       stop("\"thr\" should be lower than maximum layer value")
   } else {
-    if (class(thr) != "RasterLayer")
+    if (!is(thr, "SpatRaster"))
       stop(paste("\"thr\" class should be \"numeric\",",
-                 "\"integer\", or \"RasterLayer\""))
+                 "\"integer\", or \"SpatRaster\""))
   }
-
   r > thr
 }

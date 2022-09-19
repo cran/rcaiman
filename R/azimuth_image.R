@@ -2,41 +2,64 @@
 #'
 #' Build a single layer image with azimuth angles as pixel values.
 #'
-#' @param z \linkS4class{RasterLayer} built with
-#'   \code{\link{zenith_image}}.
+#' @inheritParams ootb_mblt
+#' @param orientation The azimuthal angle at which the top of the image is
+#'   facing, in degrees. Generally, it corresponds to the angle at which the top
+#'   of the camera was facing at the moment of acquisition.
 #'
-#'
-#' @return An object of class \linkS4class{RasterLayer} of azimuth angles
-#'   in degrees. North (0º) is pointing up as in maps, but East (90º) and West
-#'   (270º) are flipped respect to maps. To understand why is that, take two
-#'   flash-card size pieces of paper. Put one on a table in front of you and
-#'   draw on it a compass rose. Take the other and hold it with your arms
-#'   extended over your head, and, following the directions of the compass rose
-#'   in front of you, draw another compass rose in the paper side that face
-#'   down. Then, put it down and compare both compass roses.
+#' @return An object of class \linkS4class{SpatRaster} with azimuth angles in
+#'   degrees. If the \code{orientation} argument is zero, North (0º) is pointing
+#'   up as in maps, but East (90º) and West (270º) are flipped respecting to
+#'   maps. To understand why is that, do the following: take two flash-card size
+#'   pieces of paper; put one on a table in front of you and draw on it a
+#'   compass rose; take the other and hold it with your arms extended over your
+#'   head and, following the directions of the compass rose in front of you,
+#'   draw another one in the paper side that face down--It will be an awkward
+#'   position, like if you were taking an upward-looking photo with a mobile
+#'   device while looking at the screen--; finally, put it down and compare both
+#'   compass roses.
 #' @export
 #'
-#' @family Lens functions
+#' @family Lens Functions
 #'
 #' @examples
 #' z <- zenith_image(1490, lens("Nikon_FCE9"))
-#' azimuth_image(z)
-#' plot(z)
-azimuth_image <- function (z)
+#' a <- azimuth_image(z)
+#' plot(a)
+#' \dontrun{
+#' a <- azimuth_image(z, 45)
+#' plot(a)
+#' }
+azimuth_image <- function (z, orientation = 0)
 {
-  stopifnot(class(z) == "RasterLayer")
+  .is_single_layer_raster(z, "z")
   mask <- is.na(z)
 
-  xy <- xyFromCell(z, seq(length = ncell(z)))
-  v <- values(z)
+  xy <- terra::xyFromCell(z, seq(length = ncell(z)))
   sph <- pracma::cart2sph(
-    matrix(c(xy[, 1] - ncol(z) / 2, xy[, 2] - ncol(z) / 2, values(z)), ncol = 3)
+    matrix(c(xy[, 1] - ncol(z) / 2,
+             xy[, 2] - ncol(z) / 2,
+             terra::values(z)), ncol = 3)
   )
 
   values(z) <- sph[, 1] * 180 / pi
-  values(z) <- values(abs(raster::t(z) - 180)) #to orient North up and West left
+  values(z) <- terra::values(abs(terra::trans(z) - 180))
+  # above line is to orient North up and West left
+
+  if (orientation != 0) {
+    if (!requireNamespace("imager", quietly = TRUE)) {
+      stop(paste("Package \"imager\" needed for this function to work.",
+                 "Please install it."),
+           call. = FALSE)
+    }
+    picture_cw_rotation <- orientation
+    v <- imager::as.cimg(as.array(z)) %>% suppressWarnings()
+    v <- imager::rotate_xy(v, -picture_cw_rotation,
+                           ncol(z) / 2, nrow(z) / 2, interpolation = 0)
+    terra::values(z) <- as.matrix(v)
+  }
 
   z[mask] <- NA
-
+  names(z) <- "Azimuth image"
   z
 }

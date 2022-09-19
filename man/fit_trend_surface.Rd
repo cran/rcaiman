@@ -4,52 +4,42 @@
 \alias{fit_trend_surface}
 \title{Fit a trend surface to sky digital numbers}
 \usage{
-fit_trend_surface(
-  r,
-  bin,
-  m = NULL,
-  filling_source = NULL,
-  prob = 0.95,
-  fact = 5,
-  np = 6
-)
+fit_trend_surface(r, z, a, bin, filling_source = NULL, np = 6)
 }
 \arguments{
-\item{r}{\linkS4class{RasterLayer}. A normalized greyscale image. Typically,
-the blue channel extracted from an hemispherical photograph. Please see
+\item{r}{\linkS4class{SpatRaster}. A normalized greyscale image. Typically,
+the blue channel extracted from a canopy photograph. Please see
 \code{\link{read_caim}} and \code{\link{normalize}}.}
 
-\item{bin}{\linkS4class{RasterLayer}. A working binarized image. This should
-be a preliminary binarization of \code{r}. If the function returns
-\code{NA}, then the quality of this input should be revised.}
+\item{z}{\linkS4class{SpatRaster} built with \code{\link{zenith_image}}.}
 
-\item{m}{\linkS4class{RasterLayer}. A mask. Usually, the result of a call to
-\code{\link{mask_hs}}.}
+\item{a}{\linkS4class{SpatRaster} built with \code{\link{azimuth_image}}.}
 
-\item{filling_source}{\linkS4class{RasterLayer}. Default is \code{NULL}.
-Above-canopy photograph. This image should contain pixels with sky DN
-values and \code{NA} in all the other pixels. A photograph taken
-immediately after or before taking \code{r} under the open sky with the
-same equipment and configuration is a very good option. The ideal option is
-one taken at the same time and place but above the canopy. The orientation
-relative to the North must be the same than for \code{r}.}
+\item{bin}{\linkS4class{SpatRaster}. This should be a preliminary
+binarization of \code{r} useful for masking pixels that are very likely
+to be pure sky pixels.}
 
-\item{prob}{Logical vector of length one. Probability for
-\code{\link[stats]{quantile}} calculation. See reference
-\insertCite{Diaz2018;textual}{rcaiman}.}
-
-\item{fact}{postive integer. Aggregation factor expressed as number of cells in each direction (horizontally and vertically). Or two integers (horizontal and vertical aggregation factor) or three integers (when also aggregating over layers). See Details}
+\item{filling_source}{\linkS4class{SpatRaster}. An actual or reconstructed
+above-canopy image to complement the sky pixels detected through the gaps
+of \code{r}. If an incomplete above-canopy image is available, non-sky
+pixels should be turned \code{NA} or they will be considered as sky pixels
+erroneously. A photograph taken immediately after or before taking \code{r}
+under the open sky with the same equipment and configuration is a very good
+option but not recommended under fleeting clouds. The orientation relative
+to the North must be the same as for \code{r}. If it is set to \code{NULL}
+(default), only sky pixels from \code{r} will be used as input.}
 
 \item{np}{
 degree of polynomial surface
 }
 }
 \value{
-A list with an object of class \linkS4class{RasterLayer} and of class
+A list with an object of class \linkS4class{SpatRaster} and of class
   \code{trls} (see \code{\link[spatial]{surf.ls}}).
 }
 \description{
-Fit a trend surface using spatial::surf.ls as workhorse function.
+Fit a trend surface using \code{\link[spatial]{surf.ls}} as workhorse
+function.
 }
 \details{
 This function is meant to be used after \code{\link{fit_coneshaped_model}}.
@@ -59,28 +49,24 @@ A short explanation of this function can be found on
 the sky DN as a previous step for our method}, after the explanation of the
 \code{\link{fit_coneshaped_model}}.
 
-The argument \code{fact} is passed to \code{\link[raster]{aggregate}}. That
-argument allows to control the scale at which the fitting is performed. In
-general, a coarse scale lead to best generalization. The function used for
-aggregation is \code{\link[stats]{quantile}}, to which the argument
-\code{prob} is passed. Essentially, the aggregation step works as the one
-from \code{\link{fit_coneshaped_model}}, but it is made on the raster space
-rather than on the hemispherical space.
-
 If you use this function in your research, please cite
-\insertCite{Diaz2018}{rcaiman}.
+\insertCite{Diaz2018;textual}{rcaiman} in addition to this package.
 }
 \examples{
 \dontrun{
-path <- system.file("external/4_D_2_DSCN4502.JPG", package = "rcaiman")
-r <- read_caim(path, c(1280, 960) - 745, 745 * 2, 745 * 2)
-z <- zenith_image(ncol(r), lens("Nikon_FCE9"))
+path <- system.file("external/DSCN4500.JPG", package = "rcaiman")
+caim <- read_caim(path, c(1280, 960) - 745, 745 * 2, 745 * 2)
+z <- zenith_image(ncol(caim), lens("Nikon_FCE9"))
 a <- azimuth_image(z)
-blue <- gbc(r$Blue)
-bin <- find_sky_pixels(blue, z, a)
-sky <- fit_coneshaped_model(blue, z, a, bin, parallel = FALSE)
+r <- gbc(caim$Blue)
+g <- sky_grid_segmentation(z, a, 10)
+bin <- find_sky_pixels(r, z, a)
+sky_points <- extract_sky_points(r, bin, g)
+sky_points <- extract_rl(r, z, a, sky_points, NULL)
+model <- fit_coneshaped_model(sky_points$sky_points)
+sky_cs <- model$fun(z, a)
 m <- mask_hs(z, 0, 80)
-sky <- fit_trend_surface(blue, bin, m, filling_source = sky$image)
+sky <- fit_trend_surface(r, z, a, bin, filling_source = sky_cs)
 plot(sky$image)
 }
 }
@@ -88,10 +74,14 @@ plot(sky$image)
 \insertAllCited{}
 }
 \seealso{
-Other MBLT functions: 
-\code{\link{find_sky_pixels}()},
+\code{\link{thr_image}}
+
+Other Sky Reconstruction Functions: 
+\code{\link{cie_sky_model_raster}()},
+\code{\link{fit_cie_sky_model}()},
 \code{\link{fit_coneshaped_model}()},
-\code{\link{ootb_mblt}()},
-\code{\link{thr_image}()}
+\code{\link{fix_reconstructed_sky}()},
+\code{\link{interpolate_sky_points}()},
+\code{\link{ootb_sky_reconstruction}()}
 }
-\concept{MBLT functions}
+\concept{Sky Reconstruction Functions}

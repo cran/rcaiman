@@ -4,39 +4,50 @@
 \alias{azimuth_image}
 \title{Azimuth image}
 \usage{
-azimuth_image(z)
+azimuth_image(z, orientation = 0)
 }
 \arguments{
-\item{z}{\linkS4class{RasterLayer} built with
-\code{\link{zenith_image}}.}
+\item{z}{\linkS4class{SpatRaster} built with \code{\link{zenith_image}}.}
+
+\item{orientation}{The azimuthal angle at which the top of the image is
+facing, in degrees. Generally, it corresponds to the angle at which the top
+of the camera was facing at the moment of acquisition.}
 }
 \value{
-An object of class \linkS4class{RasterLayer} of azimuth angles
-  in degrees. North (0º) is pointing up as in maps, but East (90º) and West
-  (270º) are flipped respect to maps. To understand why is that, take two
-  flash-card size pieces of paper. Put one on a table in front of you and
-  draw on it a compass rose. Take the other and hold it with your arms
-  extended over your head, and, following the directions of the compass rose
-  in front of you, draw another compass rose in the paper side that face
-  down. Then, put it down and compare both compass roses.
+An object of class \linkS4class{SpatRaster} with azimuth angles in
+  degrees. If the \code{orientation} argument is zero, North (0º) is pointing
+  up as in maps, but East (90º) and West (270º) are flipped respecting to
+  maps. To understand why is that, do the following: take two flash-card size
+  pieces of paper; put one on a table in front of you and draw on it a
+  compass rose; take the other and hold it with your arms extended over your
+  head and, following the directions of the compass rose in front of you,
+  draw another one in the paper side that face down--It will be an awkward
+  position, like if you were taking an upward-looking photo with a mobile
+  device while looking at the screen--; finally, put it down and compare both
+  compass roses.
 }
 \description{
 Build a single layer image with azimuth angles as pixel values.
 }
 \examples{
 z <- zenith_image(1490, lens("Nikon_FCE9"))
-azimuth_image(z)
-plot(z)
+a <- azimuth_image(z)
+plot(a)
+\dontrun{
+a <- azimuth_image(z, 45)
+plot(a)
+}
 }
 \seealso{
-Other Lens functions: 
+Other Lens Functions: 
 \code{\link{calc_diameter}()},
-\code{\link{calc_zenith_raster_coordinates}()},
+\code{\link{calc_zenith_raster_coord}()},
 \code{\link{calibrate_lens}()},
 \code{\link{expand_noncircular}()},
+\code{\link{fisheye_to_equidistant}()},
+\code{\link{fisheye_to_pano}()},
 \code{\link{lens}()},
-\code{\link{reproject_to_equidistant}()},
 \code{\link{test_lens_coef}()},
 \code{\link{zenith_image}()}
 }
-\concept{Lens functions}
+\concept{Lens Functions}

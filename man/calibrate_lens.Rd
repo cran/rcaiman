@@ -15,62 +15,81 @@ with the
 \item{degree}{Numeric vector of length one. Polynomial model degree.}
 }
 \value{
-An object of class list with named elements. ‘lens_coef’ stands for
-  lens coefficients, ‘max_theta’ for maximum zenith angle in degrees, and
-  ‘max_theta_px’ for distance in pixels between the zenith and the maximum
-  zenith angle in pixels units.
+An object of class \emph{list} with named elements. \emph{lens_coef}
+  stands for lens coefficients, \emph{max_theta} for maximum zenith angle in
+  degrees, and \emph{max_theta_px} for distance in pixels between the zenith
+  and the maximum zenith angle in pixels units. The latter should be double
+  checked, particularly if the zenith push pin is not exactly on the zenith
+  pixel. To that end, do the following on ImageJ: use the
+  \href{https://imagej.nih.gov/ij/docs/guide/146-19.html#toc-Subsection-19.1}{rectangular
+   selection tool} to create a small rectangle, open the Specify window by
+  going to the dropdown menu Edit>Selection>Specify..., insert the zenith
+  coordinates (obtained with \code{\link{calc_zenith_raster_coord}}) into the
+  respective X and Y fields in order to align the upper-left corner of the
+  rectangle with the zenith, mark it with the
+  \href{https://imagej.nih.gov/ij/docs/guide/146-19.html#toc-Subsection-19.14}{brush},
+   use the
+  \href{https://imagej.nih.gov/ij/docs/guide/146-19.html#toc-Subsection-19.2}{straight
+  selection tool} to find the length within the zenith and the maximum zenith
+  angle showed in the image.
 }
 \description{
 Calibrate a fisheye lens. This type of lens has wide field of view and a
-consistent azimuthal distortion, so a precise mathematical relation can be
-fit between the distance to the zenith on the image space and the zenith
-angle on the hemispherical space.
+consistent azimuthal distortion. The latter property allows fitting a precise
+mathematical relation between the distance to the zenith on the image space
+and the zenith angle on the hemispherical space.
 }
 \details{
-If you cannot find the coefficient of your lens on the literature, you may
-want to try the solution offered here. It requires, in addition to this
-package and the open-source
-\href{https://imagej.nih.gov/ij/download.html}{ImageJ software package}, the
-following materials:
+These are the instructions to produce the CSV file required by this function.
+The following materials are required:
 
-\itemize{ \item camera and lens
+\itemize{
+
+\item this package and \href{https://imagej.nih.gov/ij/download.html}{ImageJ}
+
+\item camera and lens
 
 \item tripod
 
 \item standard yoga mat
 
-\item table of about 70 \eqn{\times} larger than the yoga mat
+\item table about two times wider than the yoga mat width
 
 \item twenty two push pins of different colors
 
 \item scissors
 
-\item One print of this \href{https://osf.io/tudzc/download}{sheet} (A1 size,
+\item one print of this \href{https://osf.io/tudzc/download}{sheet} (A1 size,
 almost like a poster).
 
 }
 
 Cut the sheet by the dashed line. Place the yoga mat extended on top of the
 table. Place the sheet on top of the yoga mat. Align the dashed line with the
-yoga mat border closest to you, and place push pins on each cross. If you are
+yoga mat border closest to you. Place push pins on each cross. If you are
 gentle, the yoga mat will allows you to do that without damaging the table.
 Of course, other materials could be used to obtain the same result, such as
 cardboard, foam, nails, etc.
 
-Place the camera on the tripod, align its optical axis with the table while
+Place the camera on the tripod. Align its optical axis with the table while
 looking for getting an image showing the overlapping of the three pairs of
-push pins as instructed in the print. Take a photograph and check if it looks
-more or less like \href{https://osf.io/tudzc/download}{this one}.
+push pins as instructed in the print. In order to take care of the line of
+pins at 90º relative to the optical axis, it may be better to use the naked
+eye to align the front of the lens with the pins.
 
 Transfer the photograph to the computer, open it with ImageJ, and use the
 \href{https://imagej.nih.gov/ij/docs/guide/146-19.html#sec:Multi-point-Tool}{point
 selection tool} to digitize the push pins, starting from the zenith push pin
-and not skipping any showed push pin. This method was inspired by the
-calibration board from \insertCite{Clark1988;textual}{rcaiman}.
+and not skipping any showed push pin. Then, use the dropdown menu
+Analyze>Measure to open the window Results. To obtain the CSV, use File>Save
+As...
 
-As a tip, use \code{\link{test_lens_coef}} to test if coefficient are OK. If
-not, try moving the last points a little bit. Put the last one a few pixels
-farther from the zenith is usually enough.
+This method was inspired by the calibration board from
+\insertCite{Clark1988;textual}{rcaiman}.
+
+\strong{TIP:} use \code{\link{test_lens_coef}} to test if coefficients are
+OK. If not, try moving the last points a little bit. Putting the last one a
+few pixels farther from the zenith is usually enough.
 }
 \examples{
 path <- system.file("external/Results_calibration.csv", package = "rcaiman")
@@ -84,14 +103,15 @@ test_lens_coef(calibration$lens_coef)
 \insertAllCited{}
 }
 \seealso{
-Other Lens functions: 
+Other Lens Functions: 
 \code{\link{azimuth_image}()},
 \code{\link{calc_diameter}()},
-\code{\link{calc_zenith_raster_coordinates}()},
+\code{\link{calc_zenith_raster_coord}()},
 \code{\link{expand_noncircular}()},
+\code{\link{fisheye_to_equidistant}()},
+\code{\link{fisheye_to_pano}()},
 \code{\link{lens}()},
-\code{\link{reproject_to_equidistant}()},
 \code{\link{test_lens_coef}()},
 \code{\link{zenith_image}()}
 }
-\concept{Lens functions}
+\concept{Lens Functions}

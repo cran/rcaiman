@@ -2,33 +2,50 @@
 #'
 #' Calculate the diameter in pixels of a 180º fisheye image.
 #'
-#' This function is useful to handle devices with field of view different than
-#' 180 degrees. Given a lens projection function and data points consisting of
-#' radii (pixels) and their correspondent zenith angle (\eqn{\theta}), it
-#' returns the radius of the horizon (i.e., the radius for \eqn{\theta} equal to
-#' 90 degrees).
+#' This function helps handle devices with a field of view different than 180
+#' degrees. Given a lens projection function and data points consisting of radii
+#' (pixels) and their correspondent zenith angle (\eqn{\theta}), it returns the
+#' radius of the horizon (i.e., the radius for \eqn{\theta} equal to 90
+#' degrees).
 #'
-#' It is particularly useful when working with non-circular hemispherical
-#' photography. It will help to find the diameter that a circular image would
-#' have if the equipment would depict the whole hemisphere.
+#' When working with non-circular hemispherical photography, this function will
+#' help to find the diameter that a circular image would have if the equipment
+#' would record the whole hemisphere.
 #'
 #' The required data (radius-angle data) can be obtained following the
 #' instructions given in the
 #' \href{https://www.schleppi.ch/patrick/hemisfer/help/en/lens.htm}{user manual
-#' of Hemisfer software}. They suggests using a corner to set up markers on the
-#' walls from 0º to 90º \eqn{\theta}. A fast way of obtaining a photograph
-#' showing several targets with known \eqn{\theta} is to find a wall, draw  a
-#' triangle of \eqn{5 \times 4 \times 3} meters on the floor, with the 4-meter
-#' side over the wall. Locate the camera over the vertice that is 3 meters away
-#' from the wall. Place it at a given height above the floor, 1.3 meters for
-#' instance. Point the camera to the wall. Make a mark on the wall at 1.3 meters
-#' over the vertice that is in front of the camera. Next, make four more marks
-#' with one meter of distance between them and on a horizontal line. This will
-#' create marks for 0º, 18º, 34º, 45º, and 54º \eqn{\theta}. Don’t forget to
-#' align the zenith coordinates with the 0º \eqn{\theta} mark and check if the
-#' optical axis is leveled.
+#' of Hemisfer software}. The following is a slightly simpler alternative:
 #'
-#' For obtaining the lens projection of a new lens, refer to
+#' \itemize{
+#'
+#' \item Find a vertical wall and a leveled floor, both well-constructed. For
+#' instance, a parking lot.
+#'
+#' \item Draw a triangle of \eqn{5 \times 4 \times 3} meters on the floor, with
+#' the 4-meter side over the wall.
+#'
+#' \item Locate the camera over the vertex that is 3 meters away from the wall.
+#' Place it at a given height above the floor, 1.3 meters for instance.
+#'
+#' \item Make a mark on the wall at chosen height over the wall-vertex nearest
+#' to the camera-vertex. Make four more marks with one meter of spacing and
+#' following a horizontal line. This will create marks for 0º, 18º, 34º, 45º,
+#' and 54º \eqn{\theta}.
+#'
+#' \item Before taking the photograph, do not forget to align the zenith
+#' coordinates with the 0º \eqn{\theta} mark and check if the optical axis is
+#' leveled.
+#'
+#' }
+#'
+#' The
+#' \href{https://imagej.nih.gov/ij/docs/guide/146-19.html#toc-Subsection-19.2}{line
+#' selection tool} of \href{https://imagej.nih.gov/ij/download.html}{ImageJ} can
+#' be used to measure the distance in pixels between points on the image. Draw a
+#' line, and use the dropdown menu Analyze>Measure to obtain its length.
+#'
+#' For obtaining the projection of a new lens, refer to
 #' \code{\link{calibrate_lens}}.
 #'
 #'
@@ -36,10 +53,10 @@
 #' @param radius_px Numeric vector. Distance in pixels from the zenith.
 #' @param angle Numeric vector. Zenith angle in degrees.
 #'
-#' @family Lens functions
+#' @family Lens Functions
 #'
-#' @return Numeric vector of length one. The diameter is expressed in whole
-#'   numbers following the standard practice.
+#' @return Numeric vector of length one. Diameter adjusted to a whole number
+#'   (see \code{\link{zenith_image}} for details about that constrain).
 #'
 #' @export
 #'
@@ -63,7 +80,7 @@ calc_diameter <- function(lens_coef, radius_px, angle) {
     attr(diameter, "IQR") <- stats::IQR(diameters)
   }
 
-  if (diameter / 2 != round(diameter / 2)) {
+  if (!.is_even(diameter)) {
     diameter <- diameter + 1
   }
 

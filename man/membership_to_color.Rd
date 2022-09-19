@@ -2,12 +2,12 @@
 % Please edit documentation in R/membership_to_color.R
 \name{membership_to_color}
 \alias{membership_to_color}
-\title{Compute membership to a color}
+\title{Compute the membership to a target color}
 \usage{
 membership_to_color(caim, target_color, sigma = NULL)
 }
 \arguments{
-\item{caim}{\linkS4class{RasterBrick}. The return of a call to
+\item{caim}{\linkS4class{SpatRaster}. The return of a call to
 \code{\link{read_caim}}.}
 
 \item{target_color}{\linkS4class{color}.}
@@ -17,28 +17,28 @@ estimate it automatically as the euclidean distance between
 \code{target_color} and grey in the \emph{CIE L*a*b*} color space.}
 }
 \value{
-It returns an object from the class \linkS4class{RasterBrick} or
-  \linkS4class{RasterStack} --this will depend on the input. First layer is
-  the membership to the target color. Second layer is the membership to grey.
-  Both memberships are calculated with same \code{sigma}.
+It returns an object from the class \linkS4class{SpatRaster}. First
+  layer is the membership to the target color. Second layer is the membership
+  to grey. Both memberships are calculated with same \code{sigma}.
 }
 \description{
-This function is presented in \insertCite{Diaz2015;textual}{rcaiman}. It
-Computes the degree of membership to a color with two Gaussian membership
-functions and the dimensions \emph{A} and \emph{B} from the \emph{CIE L*a*b*}
-color space. The lightness dimension is not considered in the calculations.
+This function was first presented in \insertCite{Diaz2015;textual}{rcaiman}.
+It computes the degree of membership to a color with two Gaussian membership
+functions and the dimensions \emph{a*} and \emph{b*} from the
+\emph{CIE L*a*b*} color space. To be clear, the lightness dimension is not
+considered in the calculations.
 }
 \details{
 If you use this function in your research, please cite
-\insertCite{Diaz2015}{rcaiman}.
+\insertCite{Diaz2015;textual}{rcaiman} in addition to this package.
 }
 \examples{
 \dontrun{
 caim <- read_caim()
+plot(caim)
 caim <- normalize(caim, 0, 255)
 z <- zenith_image(ncol(caim), lens("Nikon_FCE9"))
-target_color <- colorspace::sRGB(matrix(c(0.529, 0.808, 0.921), ncol = 3))
-mem <- membership_to_color(caim, target_color)
+mem <- membership_to_color(caim, sRGB(0.25, 0.75, 0))
 plot(mem)
 }
 }
@@ -46,8 +46,10 @@ plot(mem)
 \insertAllCited{}
 }
 \seealso{
-Other Fuzzy logic functions: 
+Other Pre-processing Functions: 
 \code{\link{enhance_caim}()},
-\code{\link{local_fuzzy_thresholding}()}
+\code{\link{gbc}()},
+\code{\link{local_fuzzy_thresholding}()},
+\code{\link{normalize}()}
 }
-\concept{Fuzzy logic functions}
+\concept{Pre-processing Functions}

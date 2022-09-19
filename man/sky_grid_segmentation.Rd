@@ -7,11 +7,9 @@
 sky_grid_segmentation(z, a, angle_width, sequential = FALSE)
 }
 \arguments{
-\item{z}{\linkS4class{RasterLayer} built with
-\code{\link{zenith_image}}.}
+\item{z}{\linkS4class{SpatRaster} built with \code{\link{zenith_image}}.}
 
-\item{a}{\code{\linkS4class{RasterLayer}} built with
-\code{\link{azimuth_image}}.}
+\item{a}{\linkS4class{SpatRaster} built with \code{\link{azimuth_image}}.}
 
 \item{angle_width}{Numeric vector of length one. It should be \code{30, 15,
 10, 7.5, 6, 5, 3.75, 3, 2.5, 1.875, 1} or \code{0.5} degrees. This
@@ -24,8 +22,8 @@ segments are labeled with sequential numbers. By default (\code{FALSE}),
 labeling numbers are not sequential (see Details).}
 }
 \value{
-An object from the class \linkS4class{RasterLayer} with segments
-  shaped like windshields, although some of them will look elongated in
+An object from the class \linkS4class{SpatRaster} with segments
+  shaped like windshields, though some of them will look elongated in
   height. The pattern is two opposite and converging straight sides and two
   opposite and parallel curvy sides.
 }
@@ -34,7 +32,7 @@ Segmenting the hemisphere view into segments of equal angular resolution for
 both zenith and azimuth angles.
 }
 \details{
-Intersecting rings with sectors makes a grid in which each segment is a
+Intersecting rings with sectors makes a grid in which each cell is a
 portion of the hemisphere. Each pixel of the grid is labeled with an ID that
 codify both ring and sector IDs. For example, a grid with a regular interval
 of one degree has segment from \code{1001} to \code{360090}. This numbers are
@@ -48,13 +46,18 @@ g <- sky_grid_segmentation(z, a, 15)
 plot(g == 24005)
 \dontrun{
 g <- sky_grid_segmentation(z, a, 15, sequential = TRUE)
-plot(g, col = sample(rainbow(length(raster::unique(g)))))
+col <- terra::unique(g) \%>\% nrow() \%>\% rainbow() \%>\% sample()
+plot(g, col = col)
 }
 }
 \seealso{
-Other Segmentation functions: 
+Other Segmentation Functions: 
+\code{\link{chessboard}()},
 \code{\link{mask_hs}()},
+\code{\link{mask_sunlit_canopy}()},
+\code{\link{polar_qtree}()},
+\code{\link{qtree}()},
 \code{\link{rings_segmentation}()},
 \code{\link{sectors_segmentation}()}
 }
-\concept{Segmentation functions}
+\concept{Segmentation Functions}

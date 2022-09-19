@@ -7,8 +7,7 @@
 sectors_segmentation(a, angle_width, return_angle = FALSE)
 }
 \arguments{
-\item{a}{\code{\linkS4class{RasterLayer}} built with
-\code{\link{azimuth_image}}.}
+\item{a}{\linkS4class{SpatRaster} built with \code{\link{azimuth_image}}.}
 
 \item{angle_width}{Numeric vector of length one. Angle in degrees able to
 divide the angle range into a whole number of segments.}
@@ -18,12 +17,12 @@ the pixels that belong to a segment are labeled with an ID number.
 Otherwise, the angle mean of the segment is assigned to the pixels.}
 }
 \value{
-An object from the class \linkS4class{RasterLayer} with segments
+An object from the class \linkS4class{SpatRaster} with segments
   shaped like pizza slices.
 }
 \description{
-Segmenting an hemispherical view by slicing the azimuth angle from \code{0}
-to \code{360º} in equals intervals.
+Segmenting a hemispherical view by slicing the azimuth angle from zero
+to 360º in equals intervals.
 }
 \examples{
 z <- zenith_image(1490, lens())
@@ -32,9 +31,13 @@ sectors <- sectors_segmentation(a, 15)
 plot(sectors == 1)
 }
 \seealso{
-Other Segmentation functions: 
+Other Segmentation Functions: 
+\code{\link{chessboard}()},
 \code{\link{mask_hs}()},
+\code{\link{mask_sunlit_canopy}()},
+\code{\link{polar_qtree}()},
+\code{\link{qtree}()},
 \code{\link{rings_segmentation}()},
 \code{\link{sky_grid_segmentation}()}
 }
-\concept{Segmentation functions}
+\concept{Segmentation Functions}

@@ -7,36 +7,35 @@
 read_bin(path)
 }
 \arguments{
-\item{path}{One-length character vector. Path to read or a binarized image.}
+\item{path}{Character vector of length one. Path to a binarized image.}
 }
 \value{
-An object from class \linkS4class{RasterLayer}.
+An object from class \linkS4class{SpatRaster}.
 }
 \description{
-Wrapper functions for \code{\link[raster]{raster}}.
+Wrapper functions for \code{\link[terra]{rast}}.
 }
 \examples{
 \dontrun{
 z <- zenith_image(1000, lens())
 m <- !is.na(z)
-my_file <- file.path(tmpDir(), "mask.tif")
+my_file <- file.path(tempdir(), "mask.tif")
 write_bin(m, my_file)
 m_from_disk <- read_bin(my_file)
 plot(m - m_from_disk)
 }
 }
 \seealso{
-\code{\link{write_bin}}
-
-Other Tools functions: 
-\code{\link{apply_thr}()},
+Other Tool Functions: 
+\code{\link{colorfulness}()},
+\code{\link{defuzzify}()},
+\code{\link{extract_dn}()},
 \code{\link{extract_feature}()},
-\code{\link{gbc}()},
+\code{\link{extract_rl}()},
+\code{\link{extract_sky_points}()},
 \code{\link{masking}()},
-\code{\link{normalize}()},
 \code{\link{read_caim}()},
-\code{\link{regional_thresholding}()},
 \code{\link{write_bin}()},
 \code{\link{write_caim}()}
 }
-\concept{Tools functions}
+\concept{Tool Functions}

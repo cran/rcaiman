@@ -3,7 +3,7 @@
 #' Segmenting the hemisphere view into segments of equal angular resolution for
 #' both zenith and azimuth angles.
 #'
-#' Intersecting rings with sectors makes a grid in which each segment is a
+#' Intersecting rings with sectors makes a grid in which each cell is a
 #' portion of the hemisphere. Each pixel of the grid is labeled with an ID that
 #' codify both ring and sector IDs. For example, a grid with a regular interval
 #' of one degree has segment from \code{1001} to \code{360090}. This numbers are
@@ -11,8 +11,7 @@
 #' the ID number of the sector and \code{ringsID} is the ID number of the ring.
 #'
 #'
-#' @inheritParams azimuth_image
-#' @inheritParams sectors_segmentation
+#' @inheritParams ootb_mblt
 #' @param angle_width Numeric vector of length one. It should be \code{30, 15,
 #'   10, 7.5, 6, 5, 3.75, 3, 2.5, 1.875, 1} or \code{0.5} degrees. This
 #'   constrain is rooted in the requirement of a value able to divide both the
@@ -22,13 +21,13 @@
 #'   segments are labeled with sequential numbers. By default (\code{FALSE}),
 #'   labeling numbers are not sequential (see Details).
 #'
-#' @return An object from the class \linkS4class{RasterLayer} with segments
-#'   shaped like windshields, although some of them will look elongated in
+#' @return An object from the class \linkS4class{SpatRaster} with segments
+#'   shaped like windshields, though some of them will look elongated in
 #'   height. The pattern is two opposite and converging straight sides and two
 #'   opposite and parallel curvy sides.
 #' @export
 #'
-#' @family Segmentation functions
+#' @family Segmentation Functions
 #'
 #' @examples
 #' z <- zenith_image(1490, lens())
@@ -37,13 +36,11 @@
 #' plot(g == 24005)
 #' \dontrun{
 #' g <- sky_grid_segmentation(z, a, 15, sequential = TRUE)
-#' plot(g, col = sample(rainbow(length(raster::unique(g)))))
+#' col <- terra::unique(g) %>% nrow() %>% rainbow() %>% sample()
+#' plot(g, col = col)
 #' }
 sky_grid_segmentation <- function(z, a, angle_width, sequential = FALSE) {
-  stopifnot(class(z) == "RasterLayer")
-  stopifnot(class(a) == "RasterLayer")
-  stopifnot(.get_max(z) <= 90)
-
+  stopifnot(length(sequential) == 1)
   stopifnot(class(sequential) == "logical")
   stopifnot(length(angle_width) == 1)
 
@@ -57,18 +54,14 @@ sky_grid_segmentation <- function(z, a, angle_width, sequential = FALSE) {
   }
 
   fun <- function(s, r) s * 1000 + r
-
-  g <- overlay(
-    sectors_segmentation(a, angle_width),
-    rings_segmentation(z, angle_width),
-    fun = fun
-  )
+  g <- fun(sectors_segmentation(a, angle_width),
+           rings_segmentation(z, angle_width))
 
   if (sequential) {
-    df <- levels(as.factor(g))[[1]]
-    df <- cbind(df, 1:nrow(df))
-    g <- raster::subs(g, df)
+    from <- unique(terra::values(g))
+    to <- 1:length(from)
+    g <- terra::subst(g, from, to)
   }
-
-  as.factor(g)
+  names(g) <- "Sky grid"
+  g
 }

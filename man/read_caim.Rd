@@ -2,59 +2,49 @@
 % Please edit documentation in R/read_caim.R
 \name{read_caim}
 \alias{read_caim}
-\alias{read_caim,character-method}
-\alias{read_caim,missing-method}
 \title{Read a canopy image from a file}
 \usage{
-read_caim(path_to_file, upper_left = NULL, width = NULL, height = NULL)
-
-\S4method{read_caim}{character}(path_to_file, upper_left = NULL, width = NULL, height = NULL)
-
-\S4method{read_caim}{missing}(path_to_file)
+read_caim(path = NULL, upper_left = NULL, width = NULL, height = NULL)
 }
 \arguments{
-\item{path_to_file}{Character vector of length one. Path to a JPEG or TIFF
-file. The function will return a data example (see details) if no arguments
-are provided.}
+\item{path}{Character vector of length one. Path to an image, including file
+extension. The function will return a data example if no arguments are
+provided.}
 
-\item{upper_left}{An integer vector of length two (see details).}
+\item{upper_left}{An integer vector of length two.}
 
-\item{width, height}{An integer vector of length one (see details).}
+\item{width, height}{An integer vector of length one.}
 }
 \value{
-An object from class \linkS4class{RasterBrick} with its layers named
-  Red, Green, and Blue.
+An object from class \linkS4class{SpatRaster} with its layers named
+  \emph{Red}, \emph{Green}, and \emph{Blue}.
 }
 \description{
-Wrapper function for \code{\link[raster]{raster}}.
+Wrapper function for \code{\link[terra]{rast}}.
 }
 \details{
 Run \code{read_caim()} to obtain an example of a hemispherical photo taken in
-non-diffuse light conditions in a \emph{Nothofagus pumilio} forest from
-Argentina with a FC-E9 auxiliary lens attached to a Nikon Coolpix 5700.
+non-diffuse light conditions in a \emph{Nothofagus pumilio} forest with a
+FC-E9 auxiliary lens attached to a Nikon Coolpix 5700.
 
 Since this function aims to read born-digital color photographs, RGB-JPEG and
-RGB-TIFF are expected as input. To read a region of the file use
-\code{upper_left}, \code{width}, and \code{height}. The \code{upper_left}
-parameter indicates the pixels coordinates of the upper left corner of the
-region of interest (ROI). These coordinates should be in the raster
-coordinates system, which works like a spreadsheet, i.e, when you go down
-through the vertical axis, the \emph{row} number increases
-(\strong{IMPORTANT: column and row must be provided instead of row and
-column}). The \code{width}, and \code{height} parameters indicate the size of
-the boxy ROI. I recommend using \href{https://imagej.nih.gov/ij/}{‘ImageJ’}
-to obtain this parameters, but any image editor can be used, such as ‘GIMP’
-and ‘Adobe Photoshop’.
+RGB-TIFF are expected as input. Use \code{upper_left}, \code{width}, and
+\code{height} to read a region of the file. The \code{upper_left} parameter
+indicates the pixels coordinates of the upper left corner of the region of
+interest (ROI). These coordinates should be in the raster coordinates system,
+which works like a spreadsheet, i.e, when you go down through the vertical
+axis, the \emph{row} number increases (\strong{IMPORTANT: column and row must
+be provided instead of row and column as in objects from the class data.frame
+and others alike}). The \code{width} and \code{height} parameters indicate
+the size of the boxy ROI. I recommend using
+\href{https://imagej.nih.gov/ij/}{‘ImageJ’} to obtain these parameters, but
+any image editor can be used, such as ‘GIMP’ or ‘Adobe Photoshop’.
+
+\strong{TIP}: For obtaining \code{upper_left}, \code{width}, and
+\code{height}, open the image on the Fiji distro of ImageJ, draw a
+rectangular selection, and go to Edit>Selection>Specify. The same workflow
+may work with other distros.
 }
-\section{Functions}{
-\itemize{
-\item \code{read_caim,character-method}: Provide the path to a file. If The file is stored in
-the working directory, just provide the file name. File extension should be
-included in the file name.
-
-\item \code{read_caim,missing-method}: It returns an example (see details).
-}}
-
 \examples{
 # This is the example image
 r <- read_caim()
@@ -71,19 +61,23 @@ r <- read_caim(path,
                width = diameter_px,
                height = diameter_px)
 plotRGB(r)
+
+# A pre-processed image
+path <- system.file("external/DSCN6342.pgm", package = "rcaiman")
+r <- read_caim(path)
+plot(r)
 }
 \seealso{
-\code{\link{write_caim}}
-
-Other Tools functions: 
-\code{\link{apply_thr}()},
+Other Tool Functions: 
+\code{\link{colorfulness}()},
+\code{\link{defuzzify}()},
+\code{\link{extract_dn}()},
 \code{\link{extract_feature}()},
-\code{\link{gbc}()},
+\code{\link{extract_rl}()},
+\code{\link{extract_sky_points}()},
 \code{\link{masking}()},
-\code{\link{normalize}()},
 \code{\link{read_bin}()},
-\code{\link{regional_thresholding}()},
 \code{\link{write_bin}()},
 \code{\link{write_caim}()}
 }
-\concept{Tools functions}
+\concept{Tool Functions}
