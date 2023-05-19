@@ -33,8 +33,8 @@ equidistant model, the relation between zenith angle and relative radius is
 modeled with a straight line. Following
 \href{https://www.schleppi.ch/patrick/hemisfer/}{Hemisfer software}, this
 package uses a polynomial curve to model lens distortion. A third-order
-polynomial is sufficient in most cases
-\insertCite{Frazer2001}{rcaiman}.
+polynomial is sufficient in most cases \insertCite{Frazer2001}{rcaiman}.
+Equations should be fitted with angles in radians.
 
 Eventually, this will be a large database, but only the following lenses are
 available at the moment:
@@ -45,10 +45,14 @@ available at the moment:
 \item \strong{Nikon_FCE9}: Nikon FC-E9 auxiliary lens
 \insertCite{Diaz2018}{rcaiman}
 
-\item \strong{Nikkor_10.5_mm}: AF DX Fisheye-Nikkor 10.5mm f/2.8G ED
+\item \strong{Nikkor_10.5mm}: AF DX Fisheye Nikkor 10.5mm f/2.8G ED
 \insertCite{Pekin2009}{rcaiman}
 
-\item \strong{Olloclip}: Auxiliary lens. Unpublished
+\item \strong{Olloclip}: Auxiliary lens for mobile devices made by Olloclip
+\insertCite{Diaz2023}{rcaiman}
+
+\item \strong{Nikkor_8mm}: AF–S Fisheye Nikkor 8–15mm f/3.5–4.5E ED
+(unpublished)
 
 }
 }
