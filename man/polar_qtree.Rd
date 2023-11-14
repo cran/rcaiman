@@ -2,16 +2,16 @@
 % Please edit documentation in R/polar_qtree.R
 \name{polar_qtree}
 \alias{polar_qtree}
-\title{Quad-tree segmentation in the polar space}
+\title{Do quad-tree segmentation in the polar space}
 \usage{
 polar_qtree(r, z, a, scale_parameter = 0.2)
 }
 \arguments{
 \item{r}{\linkS4class{SpatRaster}.}
 
-\item{z}{\linkS4class{SpatRaster} built with \code{\link{zenith_image}}.}
+\item{z}{\linkS4class{SpatRaster} built with \code{\link[=zenith_image]{zenith_image()}}.}
 
-\item{a}{\linkS4class{SpatRaster} built with \code{\link{azimuth_image}}.}
+\item{a}{\linkS4class{SpatRaster} built with \code{\link[=azimuth_image]{azimuth_image()}}.}
 
 \item{scale_parameter}{Numeric vector of length one. Quad-tree is a top-down
 method. This parameter controls the stopping condition. Therefore, it
@@ -20,7 +20,7 @@ sizes will depend on both this parameter and the heterogeneity of \code{r}.}
 }
 \value{
 A single layer image of the class \linkS4class{SpatRaster} with
-  integer values.
+integer values.
 }
 \description{
 The quad-tree segmentation algorithm is a top-down process that makes
@@ -44,10 +44,8 @@ condition.
 }
 \examples{
 \dontrun{
-caim <- read_caim()
-plot(caim)
-caim <- normalize(caim, 0, 255)
-z <- zenith_image(ncol(caim), lens("Nikon_FCE9"))
+caim <- read_caim() \%>\% normalize()
+z <- zenith_image(ncol(caim), lens())
 a <- azimuth_image(z)
 seg <- polar_qtree(caim, z, a)
 plot(seg)

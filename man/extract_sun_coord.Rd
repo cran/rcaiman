@@ -7,29 +7,28 @@
 extract_sun_coord(r, z, a, bin, g, max_angular_dist = 30)
 }
 \arguments{
-\item{r}{\linkS4class{SpatRaster}. A normalized greyscale image. Typically,
-the blue channel extracted from a canopy photograph. Please see
-\code{\link{read_caim}} and \code{\link{normalize}}.}
+\item{r}{\linkS4class{SpatRaster}. A normalized greyscale image. Typically, the
+blue channel extracted from a canopy photograph. Please see \code{\link[=read_caim]{read_caim()}}
+and \code{\link[=normalize]{normalize()}}.}
 
-\item{z}{\linkS4class{SpatRaster} built with \code{\link{zenith_image}}.}
+\item{z}{\linkS4class{SpatRaster} built with \code{\link[=zenith_image]{zenith_image()}}.}
 
-\item{a}{\linkS4class{SpatRaster} built with \code{\link{azimuth_image}}.}
+\item{a}{\linkS4class{SpatRaster} built with \code{\link[=azimuth_image]{azimuth_image()}}.}
 
-\item{bin}{\linkS4class{SpatRaster}. This should be a preliminary
-binarization of \code{r} useful for masking pixels that are very likely
-to be pure sky pixels.}
+\item{bin}{\linkS4class{SpatRaster}. This should be a preliminary binarization of
+\code{r} useful for masking pixels that are very likely pure sky pixels.}
 
-\item{g}{\linkS4class{SpatRaster} built with
-\code{\link{sky_grid_segmentation}} or \code{\link{chessboard}}.}
+\item{g}{\linkS4class{SpatRaster} built with \code{\link[=sky_grid_segmentation]{sky_grid_segmentation()}} or
+\code{\link[=chessboard]{chessboard()}}.}
 
 \item{max_angular_dist}{Numeric vector of length one. Angle in degrees to
-control the maximum potential size of the solar corona.}
+control the potential maximum size of the solar corona.}
 }
 \value{
 Object of class \emph{list} with two numeric vectors of length two
-  named \emph{row_col} and \emph{zenith_azimuth}. The former is the raster
-  coordinates of the solar disk (row and column), and the other is the
-  angular coordinates (zenith and azimuth angles in degrees).
+named \emph{row_col} and \emph{zenith_azimuth}. The former is the raster
+coordinates of the solar disk (row and column), and the other is the
+angular coordinates (zenith and azimuth angles in degrees).
 }
 \description{
 Extract the sun coordinates for CIE sky model fitting.
@@ -37,7 +36,7 @@ Extract the sun coordinates for CIE sky model fitting.
 \details{
 This function uses an object-based image analyze framework. The segmentation
 is given by \code{g} and \code{bin}. For every cell of \code{g}, the pixels
-from \code{r} that are equal to one on \code{bin} are selected, and its
+from \code{r} that are equal to one on \code{bin} are selected and its
 maximum value is calculated. Then, the 95th percentile of these maximum
 values is computed and used to filter out cells below that threshold; i.e,
 only the cells with at least one extremely bright sky pixel is selected.
@@ -58,17 +57,39 @@ considered as the sun location.
 }
 \examples{
 \dontrun{
-caim <- read_caim() \%>\% normalize()
-z <- zenith_image(ncol(caim), lens("Nikon_FCE9"))
+caim <- read_caim()
+r <- caim$Blue
+caim <- normalize(caim, 0, 20847, TRUE)
+z <- zenith_image(ncol(caim), lens())
 a <- azimuth_image(z)
-bin <- ootb_obia(caim, z, a)
+m <- !is.na(z)
+plotRGB(caim*255)
+bin <- ootb_obia(caim, z, a, m, HSV(239, 0.85, 0.5), gamma = NULL)
 g <- sky_grid_segmentation(z, a, 10)
-r <- gbc(caim$Blue*255)
 sun_coord <- extract_sun_coord(r, z, a, bin, g, max_angular_dist = 30)
-xy <- cellFromRowCol(z, sun_coord$row_col[1], sun_coord$row_col[2]) \%>\%
-  xyFromCell(z, .)
-plot(r)
-plot(vect(xy), add = TRUE, col = 2)
+points(sun_coord$row_col[2], nrow(caim) - sun_coord$row_col[1],
+        col = 3, pch = 10)
 }
 }
-\concept{Sky Reconstruction}
+\seealso{
+Other Tool Functions: 
+\code{\link{colorfulness}()},
+\code{\link{correct_vignetting}()},
+\code{\link{defuzzify}()},
+\code{\link{extract_dn}()},
+\code{\link{extract_feature}()},
+\code{\link{extract_rl}()},
+\code{\link{extract_sky_points_simple}()},
+\code{\link{extract_sky_points}()},
+\code{\link{find_sky_pixels_nonnull}()},
+\code{\link{find_sky_pixels}()},
+\code{\link{masking}()},
+\code{\link{optim_normalize}()},
+\code{\link{percentage_of_clipped_highlights}()},
+\code{\link{read_bin}()},
+\code{\link{read_caim_raw}()},
+\code{\link{read_caim}()},
+\code{\link{write_bin}()},
+\code{\link{write_caim}()}
+}
+\concept{Tool Functions}

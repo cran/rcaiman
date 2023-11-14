@@ -23,6 +23,7 @@
   .was_normalized(r)
   .is_single_layer_raster(z, "z")
   .is_single_layer_raster(a, "a")
+  stopifnot(ncol(z) == nrow(z))
   stopifnot(.get_max(z) <= 90)
   stopifnot(.get_max(a) <= 360)
   terra::compareGeom(r, z)
@@ -50,4 +51,12 @@
 .is_logic_and_NA_free <- function(x, name = "x") {
   stopifnot(!any(is.na(x[])))
   stopifnot(is.logical(x[1][,]))
+}
+
+.this_requires_conicfit <- function() {
+  if (!requireNamespace("conicfit", quietly = TRUE)) {
+    stop(paste("Package \"conicfit\" needed for this function to work.",
+               "Please install it."),
+         call. = FALSE)
+  }
 }

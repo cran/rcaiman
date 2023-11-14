@@ -4,62 +4,68 @@
 \alias{ootb_mblt}
 \title{Out-of-the-box model-based local thresholding}
 \usage{
-ootb_mblt(r, z, a, bin = NULL, fix_cs_sky = FALSE)
+ootb_mblt(r, z, a, bin = NULL, fix_cs_sky = FALSE, w = 0.5)
 }
 \arguments{
-\item{r}{\linkS4class{SpatRaster}. A normalized greyscale image. Typically,
-the blue channel extracted from a canopy photograph. Please see
-\code{\link{read_caim}} and \code{\link{normalize}}.}
+\item{r}{\linkS4class{SpatRaster}. A normalized greyscale image. Typically, the
+blue channel extracted from a canopy photograph. Please see \code{\link[=read_caim]{read_caim()}}
+and \code{\link[=normalize]{normalize()}}.}
 
-\item{z}{\linkS4class{SpatRaster} built with \code{\link{zenith_image}}.}
+\item{z}{\linkS4class{SpatRaster} built with \code{\link[=zenith_image]{zenith_image()}}.}
 
-\item{a}{\linkS4class{SpatRaster} built with \code{\link{azimuth_image}}.}
+\item{a}{\linkS4class{SpatRaster} built with \code{\link[=azimuth_image]{azimuth_image()}}.}
 
-\item{bin}{\linkS4class{SpatRaster}. This should be a preliminary
-binarization of \code{r} useful for masking pixels that are very likely
-to be pure sky pixels.}
+\item{bin}{\linkS4class{SpatRaster}. This should be a preliminary binarization of
+\code{r} useful for masking pixels that are very likely pure sky pixels.}
 
 \item{fix_cs_sky}{Logical vector of length one. If it is \code{TRUE},
-\code{\link{fix_reconstructed_sky}} is used to fix the cone-shaped sky.}
+\code{\link[=fix_reconstructed_sky]{fix_reconstructed_sky()}} is used to fix the cone-shaped sky.}
+
+\item{w}{Numeric vector of length one. Weighting parameter from
+\insertCite{Diaz2018;textual}{rcaiman}'s Equation 1. See \code{\link[=thr_mblt]{thr_mblt()}}}
 }
 \value{
 Object from class list containing the binarized image (named
-  \emph{bin}) and the reconstructed skies (named \emph{sky_cs} and
-  \emph{sky_s}).
+\emph{bin}) and the reconstructed skies (named \emph{sky_cs} and
+\emph{sky_s}).
 }
 \description{
-Out-of-the-box version of the model-based local thresholding (MBLT)
-algorithm.
+Out-of-the-box version of the model-based local thresholding (MBLT) algorithm
 }
 \details{
-This function is a hard-coded version of a MBLT pipeline that starts
-producing a working binarized image and ends with a refined binarized image.
-The pipeline combines these main functions \code{\link{find_sky_pixels}}--if
-\code{bin} is \code{NULL}--, \code{\link{fit_coneshaped_model}},
-\code{\link{find_sky_pixels_nonnull}}, and \code{\link{fit_trend_surface}}.
-The code can be easily inspected by calling \code{ootb_mblt}--no
-parenthesis. Advanced users can use that code as a template.
+This function is a hard-coded version of a MBLT pipeline. The MBLT approach
+proposes a linear relationship between background value and optimal threshold
+value. This function uses statistical models for sky reconstruction that are
+able to explain smooth changes in sky brightness, so this function works best
+under clear skies or overcast conditions. After the reconstruction, local
+thresholds are linearly predicted from sky brightness values (see
+\code{\link[=thr_mblt]{thr_mblt()}}).
+
+As a high-level summary, the function starts producing a working binarized
+image and ends with a refined binarized image.
+
+The pipeline combines these main functions \code{\link[=extract_sky_points_simple]{extract_sky_points_simple()}} or
+\code{\link[=extract_sky_points]{extract_sky_points()}}, \code{\link[=fit_coneshaped_model]{fit_coneshaped_model()}}, and \code{\link[=fit_trend_surface]{fit_trend_surface()}}.
+The code can be easily inspected by calling \code{ootb_mblt} without parenthesis.
+Advanced users can use that code as a template.
 
 The MBLT algorithm was first presented in
 \insertCite{Diaz2018;textual}{rcaiman}. The version presented here differs
-from that in the following main aspects:
-
+from the original in the following main aspects:
 \itemize{
-
-\item \code{intercept} is set to \code{0}, \code{slope} to \code{1}, and
-\code{w} to \code{0.5}
-
-\item This version implements a regional thresholding approach as the first
-step instead of a global one. Please refer to \code{\link{find_sky_pixels}}.
-
-\item It does not use asynchronous acquisition under the open sky.
-The cone-shaped model (\code{\link{fit_coneshaped_model}}) run without a
-filling source and the result of it is used as filling source for trend
-surface fitting (\code{\link{fit_trend_surface}}).
-
-\item  \code{\link{find_sky_pixels_nonnull}} is used to update the first
-working binarized image, after \code{\link{fit_coneshaped_model}}.
-
+\item The original version used a global thresholding method to provide sky
+points to the cone-shaped model. This one uses \code{\link[=extract_sky_points_simple]{extract_sky_points_simple()}}.
+Nevertheless, a binarized image can be provided through the \code{bin} argument,
+triggering the use of \code{\link[=extract_sky_points]{extract_sky_points()}} instead of
+\code{\link[=extract_sky_points_simple]{extract_sky_points_simple()}}.
+\item \code{intercept} and \code{slope} are automatically obtained using data from sky
+points and a linear model for accuracy evaluation after
+\insertCite{Pineiro2008;textual}{rcaiman}. This approach handles inaccuracies
+in background reconstruction (see \code{\link[=thr_mblt]{thr_mblt()}} for additional details).
+\item This version does not use asynchronous acquisition under the open sky, as
+the original method did. The cone-shaped model (\code{\link[=fit_coneshaped_model]{fit_coneshaped_model()}}) run
+without a filling source and the cone-shaped sky is used as filling source
+for trend surface fitting (\code{\link[=fit_trend_surface]{fit_trend_surface()}}).
 }
 
 This function searches for black objects against a light background. When
@@ -70,34 +76,31 @@ hemispherical photograph taken under the open sky is provided, this algorithm
 would be still searching black objects against a light background, so the
 darker portions of the sky will be taken as objects, i.e., canopy. As a
 consequence, this will not fit users expectations since they are looking for
-the classes \emph{Gap} and \emph{No-gap}, no matter if one of those are not
-in the picture itself. This kind of error could happen with photographs of
-open forests for the same working principle.
+the classes \emph{Gap} and \emph{No-gap}, no matter if one of those are not in the
+picture itself. This kind of error could happen with photographs of open
+forests for the same working principle.
 
 If you use this function in your research, please cite
-\insertCite{Diaz2018;textual}{rcaiman} in addition to this package.
+\insertCite{Diaz2018;textual}{rcaiman} in addition to this package
+(\verb{citation("rcaiman"}).
+}
+\note{
+If \code{NULL} is provided as the \code{w} argument, the weight is calculated as the
+coefficient of determination (\eqn{R^2}) of linear model for accuracy
+evaluation \insertCite{Pineiro2008}{rcaiman}.
 }
 \examples{
 \dontrun{
 path <- system.file("external/DSCN4500.JPG", package = "rcaiman")
-caim <- read_caim(path, c(1280, 960) - 745, 745 * 2, 745 * 2)
+caim <- read_caim(path, c(1250, 1020) - 745, 745 * 2, 745 * 2)
 z <- zenith_image(ncol(caim), lens("Nikon_FCE9"))
 a <- azimuth_image(z)
 r <- gbc(caim$Blue)
-r[is.na(z)] <- 0 #because FOV > 180
-bin <- ootb_mblt(r, z, a)
+r <- correct_vignetting(r, z, c(0.0638, -0.101)) \%>\% normalize()
+bin <- find_sky_pixels(r, z, a)
+bin <- ootb_mblt(r, z, a, bin)
 plot(bin$bin)
 
-ratio <- r/bin$sky_s
-ratio <- normalize(ratio, 0, 1, TRUE)
-# Alternative 1
-plot(apply_thr(ratio, thr_isodata(ratio[!is.na(z)])))
-
-# Alternative 2
-g <- sky_grid_segmentation(z, a, 10)
-plot(defuzzify(ratio, g))
-
-##Note: In this example, differences are small, but they can be notorious.
 }
 }
 \references{
@@ -106,12 +109,10 @@ plot(defuzzify(ratio, g))
 \seealso{
 Other Binarization Functions: 
 \code{\link{apply_thr}()},
-\code{\link{find_sky_pixels_nonnull}()},
-\code{\link{find_sky_pixels}()},
 \code{\link{obia}()},
 \code{\link{ootb_obia}()},
 \code{\link{regional_thresholding}()},
-\code{\link{thr_image}()},
-\code{\link{thr_isodata}()}
+\code{\link{thr_isodata}()},
+\code{\link{thr_mblt}()}
 }
 \concept{Binarization Functions}

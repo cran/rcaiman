@@ -13,7 +13,7 @@ read_bin(path)
 An object from class \linkS4class{SpatRaster}.
 }
 \description{
-Wrapper functions for \code{\link[terra]{rast}}.
+Wrapper functions for \code{\link[terra:rast]{terra::rast()}}.
 }
 \examples{
 \dontrun{
@@ -28,12 +28,20 @@ plot(m - m_from_disk)
 \seealso{
 Other Tool Functions: 
 \code{\link{colorfulness}()},
+\code{\link{correct_vignetting}()},
 \code{\link{defuzzify}()},
 \code{\link{extract_dn}()},
 \code{\link{extract_feature}()},
 \code{\link{extract_rl}()},
+\code{\link{extract_sky_points_simple}()},
 \code{\link{extract_sky_points}()},
+\code{\link{extract_sun_coord}()},
+\code{\link{find_sky_pixels_nonnull}()},
+\code{\link{find_sky_pixels}()},
 \code{\link{masking}()},
+\code{\link{optim_normalize}()},
+\code{\link{percentage_of_clipped_highlights}()},
+\code{\link{read_caim_raw}()},
 \code{\link{read_caim}()},
 \code{\link{write_bin}()},
 \code{\link{write_caim}()}

@@ -1,19 +1,19 @@
-#' Sectors segmentation
+#' Do sectors segmentation
 #'
-#' Segmenting a hemispherical view by slicing the azimuth angle from zero
+#' Segment a hemispherical view by slicing the azimuth angle from zero
 #' to 360º in equals intervals.
 #'
 #' @inheritParams ootb_mblt
 #' @inheritParams rings_segmentation
 #'
-#' @return An object from the class \linkS4class{SpatRaster} with segments
+#' @return An object from the class [SpatRaster-class] with segments
 #'   shaped like pizza slices.
 #' @export
 #'
 #' @family Segmentation Functions
 #'
 #' @examples
-#' z <- zenith_image(1490, lens())
+#' z <- zenith_image(600, lens())
 #' a <- azimuth_image(z)
 #' sectors <- sectors_segmentation(a, 15)
 #' plot(sectors == 1)

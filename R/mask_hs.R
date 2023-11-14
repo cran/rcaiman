@@ -3,16 +3,16 @@
 #' Given a zenith or azimuth image and angle restrictions, this function
 #' produces a mask.
 #'
-#' @param r \linkS4class{SpatRaster} built with \code{\link{zenith_image}} or
-#'   \code{\link{azimuth_image}}.
+#' @param r [SpatRaster-class] built with [zenith_image()] or
+#'   [azimuth_image()].
 #' @param from,to angle in degrees, inclusive limits.
 #'
 #' @export
 #' @family Segmentation Functions
-#' @seealso \code{\link{masking}}
+#' @seealso [masking()]
 #'
-#' @return An object of class \linkS4class{SpatRaster} with values \code{0} and
-#'   \code{1}.
+#' @return An object of class [SpatRaster-class] with values `0` and
+#'   `1`.
 #'
 #' @examples
 #' \dontrun{
@@ -25,7 +25,7 @@
 #' plot(m1 & m2)
 #' plot(m1 | m2)
 #'
-#' # if you want 15 degress at each side of 0
+#' # 15 degrees at each side of 0
 #' m1 <- mask_hs(a, 0, 15)
 #' m2 <- mask_hs(a, 345, 360)
 #' plot(m1 | m2)

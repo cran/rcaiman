@@ -2,17 +2,16 @@
 % Please edit documentation in R/sky_grid_segmentation.R
 \name{sky_grid_segmentation}
 \alias{sky_grid_segmentation}
-\title{Sky grid segmentation}
+\title{Do sky grid segmentation}
 \usage{
 sky_grid_segmentation(z, a, angle_width, sequential = FALSE)
 }
 \arguments{
-\item{z}{\linkS4class{SpatRaster} built with \code{\link{zenith_image}}.}
+\item{z}{\linkS4class{SpatRaster} built with \code{\link[=zenith_image]{zenith_image()}}.}
 
-\item{a}{\linkS4class{SpatRaster} built with \code{\link{azimuth_image}}.}
+\item{a}{\linkS4class{SpatRaster} built with \code{\link[=azimuth_image]{azimuth_image()}}.}
 
-\item{angle_width}{Numeric vector of length one. It should be \code{30, 15,
-10, 7.5, 6, 5, 3.75, 3, 2.5, 1.875, 1} or \code{0.5} degrees. This
+\item{angle_width}{Numeric vector of length one. It should be \verb{30, 15, 10, 7.5, 6, 5, 3.75, 3, 2.5, 1.875, 1} or \code{0.5} degrees. This
 constrain is rooted in the requirement of a value able to divide both the
 \code{0} to \code{360} and \code{0} to \code{90} ranges into a whole number
 of segments.}
@@ -23,12 +22,12 @@ labeling numbers are not sequential (see Details).}
 }
 \value{
 An object from the class \linkS4class{SpatRaster} with segments
-  shaped like windshields, though some of them will look elongated in
-  height. The pattern is two opposite and converging straight sides and two
-  opposite and parallel curvy sides.
+shaped like windshields, though some of them will look elongated in
+height. The pattern is two opposite and converging straight sides and two
+opposite and parallel curvy sides.
 }
 \description{
-Segmenting the hemisphere view into segments of equal angular resolution for
+Segment the hemisphere view into segments of equal angular resolution for
 both zenith and azimuth angles.
 }
 \details{
@@ -40,7 +39,7 @@ calculated with: \eqn{sectorID \times 1000 + ringID}, where \eqn{sectorID} is
 the ID number of the sector and \eqn{ringID} is the ID number of the ring.
 }
 \examples{
-z <- zenith_image(1490, lens())
+z <- zenith_image(600, lens())
 a <- azimuth_image(z)
 g <- sky_grid_segmentation(z, a, 15)
 plot(g == 24005)

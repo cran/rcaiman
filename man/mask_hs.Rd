@@ -7,14 +7,14 @@
 mask_hs(r, from, to)
 }
 \arguments{
-\item{r}{\linkS4class{SpatRaster} built with \code{\link{zenith_image}} or
-\code{\link{azimuth_image}}.}
+\item{r}{\linkS4class{SpatRaster} built with \code{\link[=zenith_image]{zenith_image()}} or
+\code{\link[=azimuth_image]{azimuth_image()}}.}
 
 \item{from, to}{angle in degrees, inclusive limits.}
 }
 \value{
 An object of class \linkS4class{SpatRaster} with values \code{0} and
-  \code{1}.
+\code{1}.
 }
 \description{
 Given a zenith or azimuth image and angle restrictions, this function
@@ -31,7 +31,7 @@ plot(m2)
 plot(m1 & m2)
 plot(m1 | m2)
 
-# if you want 15 degress at each side of 0
+# 15 degrees at each side of 0
 m1 <- mask_hs(a, 0, 15)
 m2 <- mask_hs(a, 345, 360)
 plot(m1 | m2)
@@ -43,7 +43,7 @@ plot(mask_hs(z, 0, 90))
 }
 }
 \seealso{
-\code{\link{masking}}
+\code{\link[=masking]{masking()}}
 
 Other Segmentation Functions: 
 \code{\link{chessboard}()},

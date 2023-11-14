@@ -24,8 +24,8 @@
   gradation <- Phi_Z / Phi_0
 
   # Indicatrix function
-  F_Chi <-  1 + .c * (exp(.d * Chi) - exp(.d * pi/2)) + .e * cos(Chi)^2
-  F_Zs  <-  1 + .c * (exp(.d *  Zs) - exp(.d * pi/2)) + .e * cos(Zs)^2
+  F_Chi <- 1 + .c * (exp(.d * Chi) - exp(.d * pi/2)) + .e * cos(Chi)^2
+  F_Zs  <- 1 + .c * (exp(.d *  Zs) - exp(.d * pi/2)) + .e * cos(Zs)^2
   indicatrix <- F_Chi / F_Zs
 
   unname(gradation * indicatrix)
@@ -35,8 +35,8 @@
 #' CIE sky model raster
 #'
 #' @inheritParams ootb_mblt
-#' @param sun_coord Numeric vector of length two. Zenith and azimuth angles in
-#'   degrees, corresponding to the location of the solar disk center.
+#' @param sun_coord Numeric vector of length two. The solar disk
+#'   center represented with zenith and azimuth angles in degrees.
 #' @param sky_coef Numeric vector of length five. Parameters of the sky model.
 #'
 #' @family  Sky Reconstruction Functions
@@ -44,8 +44,7 @@
 #' @export
 #'
 #' @examples
-#' \dontrun{
-#' z <- zenith_image(1400, lens())
+#' z <- zenith_image(50, lens())
 #' a <- azimuth_image(z)
 #' path <- system.file("external", package = "rcaiman")
 #' skies <- read.csv(file.path(path, "15_CIE_standard_skies.csv"))
@@ -53,7 +52,6 @@
 #' sky_coef <- skies[4,1:5]
 #' sun_coord <- c(45, 0)
 #' plot(cie_sky_model_raster(z, a, sun_coord, sky_coef))
-#' }
 cie_sky_model_raster <- function(z, a, sun_coord, sky_coef) {
   .is_single_layer_raster(z)
   .is_single_layer_raster(a)
@@ -75,5 +73,7 @@ cie_sky_model_raster <- function(z, a, sun_coord, sky_coef) {
                                        as.numeric(sky_coef[4]),
                                        as.numeric(sky_coef[5]))
   terra::values(z) <- relative_luminance
+  z[is.infinite(z)] <- 0
+  names(z) <- "Relative luminance"
   z
 }

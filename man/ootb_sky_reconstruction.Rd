@@ -4,109 +4,164 @@
 \alias{ootb_sky_reconstruction}
 \title{Out-of-the-box sky reconstruction}
 \usage{
-ootb_sky_reconstruction(r, z, a, bin, filling_source = NULL)
+ootb_sky_reconstruction(
+  r,
+  z,
+  a,
+  bin,
+  filling_source = NULL,
+  dist_to_plant = 3,
+  sun_coord = NULL,
+  general_sky_type = NULL,
+  twilight = TRUE,
+  rmse = TRUE,
+  method = "BFGS",
+  try_grids = TRUE,
+  thin_points = TRUE,
+  refine_sun_coord = TRUE,
+  try_optims = TRUE,
+  force_sampling = TRUE,
+  interpolate = TRUE
+)
 }
 \arguments{
-\item{r}{\linkS4class{SpatRaster}. A normalized greyscale image. Typically,
-the blue channel extracted from a canopy photograph. Please see
-\code{\link{read_caim}} and \code{\link{normalize}}.}
+\item{r}{\linkS4class{SpatRaster}. A normalized greyscale image. Typically, the
+blue channel extracted from a canopy photograph. Please see \code{\link[=read_caim]{read_caim()}}
+and \code{\link[=normalize]{normalize()}}.}
 
-\item{z}{\linkS4class{SpatRaster} built with \code{\link{zenith_image}}.}
+\item{z}{\linkS4class{SpatRaster} built with \code{\link[=zenith_image]{zenith_image()}}.}
 
-\item{a}{\linkS4class{SpatRaster} built with \code{\link{azimuth_image}}.}
+\item{a}{\linkS4class{SpatRaster} built with \code{\link[=azimuth_image]{azimuth_image()}}.}
 
-\item{bin}{\linkS4class{SpatRaster}. This should be a preliminary
-binarization of \code{r} useful for masking pixels that are very likely
-to be pure sky pixels.}
+\item{bin}{\linkS4class{SpatRaster}. This should be a preliminary binarization of
+\code{r} useful for masking pixels that are very likely pure sky pixels.}
 
 \item{filling_source}{\linkS4class{SpatRaster}. An actual or reconstructed
 above-canopy image to complement the sky pixels detected through the gaps
-of \code{r}. If an incomplete above-canopy image is available, non-sky
-pixels should be turned \code{NA} or they will be considered as sky pixels
-erroneously. A photograph taken immediately after or before taking \code{r}
-under the open sky with the same equipment and configuration is a very good
-option but not recommended under fleeting clouds. The orientation relative
-to the North must be the same as for \code{r}. If it is set to \code{NULL}
-(default), only sky pixels from \code{r} will be used as input.}
+of \code{r}. A photograph taken immediately after or before taking \code{r} under the
+open sky with the same equipment and configuration is a very good option
+but not recommended under fleeting clouds. The orientation relative to the
+North must be the same as for \code{r}. If it is set to \code{NULL} (default), only
+sky pixels from \code{r} will be used as input.}
+
+\item{dist_to_plant}{Numeric vector of length one or \code{NULL}. See
+\code{\link[=extract_sky_points]{extract_sky_points()}}.}
+
+\item{sun_coord}{An object of class \emph{list}. The result of a call to
+\code{\link[=extract_sun_coord]{extract_sun_coord()}} or an object with same structure and names. See also
+\code{\link[=row_col_from_zenith_azimuth]{row_col_from_zenith_azimuth()}} in case you want to provide values based on
+date and time of acquisition and the \code{suncalc} package.}
+
+\item{general_sky_type}{Character vector of length one. It could be any of
+these: "Overcast", "Clear", or "Partly cloudy". See Table 1 from
+\insertCite{Li2016;textual}{rcaiman} for additional details.}
+
+\item{twilight}{Logical vector of length one. If it is \code{TRUE} and the initial
+standard parameters belong to the "Clear" general sky type, sun zenith
+angles from 90 to 96 degrees will be tested (civic twilight). This is
+necessary since \code{\link[=extract_sun_coord]{extract_sun_coord()}} would mistakenly recognize the center
+of what can be seen of the solar corona as the solar disk.}
+
+\item{rmse}{Logical vector of length one. If it is \code{TRUE}, the criteria for
+selecting the best sky model is to choose the one with the lowest \strong{root
+mean square error (RMSE)} calculated by using the \code{sky_points} argument as
+the source of reference values. Otherwise, the criteria is to evaluate the
+whole image by calculating the \strong{out-of-range index} as \eqn{\sum_{i =
+  1}^{N}(r_i/sky_i)^2}, where \eqn{r} is the \code{r} argument, \eqn{sky} is the
+raster obtained from the fitted model with \code{\link[=cie_sky_model_raster]{cie_sky_model_raster()}} and
+\code{zenith_dn}, \eqn{i} is the index that represents the position of a given
+pixel on the raster grid, and \eqn{N} is the total number of pixels that
+satisfy either of these inequalities: \eqn{r_i/sky_i<0} and
+\eqn{r_i/sky_i>1}.}
+
+\item{method}{Optimization method to use. See \code{\link{optim}}.}
+
+\item{try_grids}{Logical vector of length one.}
+
+\item{thin_points}{Logical vector of length one.}
+
+\item{refine_sun_coord}{Logical vector of length one.}
+
+\item{try_optims}{Logical vector of length one.}
+
+\item{force_sampling}{Logical vector of length one.}
+
+\item{interpolate}{Logical vector of length one. If \code{TRUE},
+\code{\link[=interpolate_sky_points]{interpolate_sky_points()}} will be used.}
+}
+\value{
+If a filling source is not provided, the result is an object from the
+class \emph{list} that includes the following: (1) the reconstructed sky
+(\linkS4class{SpatRaster}), (2) the output produced by \code{\link[=fit_cie_sky_model]{fit_cie_sky_model()}}, (3)
+the out-of-range index (see \code{\link[=fit_cie_sky_model]{fit_cie_sky_model()}}), (4) sky points that
+were not involved in obtaining (2), (5) an object from the class \code{lm} (see
+\code{\link[stats:lm]{stats::lm()}}) that is the result of validating (1) with (4) and the method
+recommended by \insertCite{Pineiro2008;textual}{rcaiman}, and (6) a
+binarized image produced with (1), the coefficients from (4) and
+\code{\link[=thr_mblt]{thr_mblt()}} with \code{\link[=apply_thr]{apply_thr()}}, using 'w=0.95'. If a filling source is
+provided, only a reconstructed sky (\linkS4class{SpatRaster}) is returned.
 }
 \description{
-Build an above canopy image from a single below canopy image.
+Build an above canopy image from a single below canopy image
 }
 \details{
 This function is a hard-coded version of a pipeline that uses these main
-functions \code{\link{fit_cie_sky_model}} and
-\code{\link{interpolate_sky_points}}. The code can be easily inspected by
-calling \code{ootb_sky_reconstruction}--no parenthesis. Advanced users could
-use that code as a template.
+functions \code{\link[=fit_cie_sky_model]{fit_cie_sky_model()}} and \code{\link[=interpolate_sky_points]{interpolate_sky_points()}}.
 
-This pipeline is based on \insertCite{Lang2010;textual}{rcaiman}. The main
-differences between the original method by
-\insertCite{Lang2010;textual}{rcaiman} and the one implemented here are:
+The pipeline is an automatic version of the
+\insertCite{Lang2010;textual}{rcaiman} method.
 
-\itemize{
-
-\item it is fully automatic,
-
-\item the residuals of the CIE sky model (\eqn{residuals=model-data}) are
-interpolated instead of the sky digital numbers (the data), and
-
-\item the final sky reconstruction is obtained by subtracting the
-interpolated residuals to the CIE sky model instead of by calculating a
-weighted average parameterized by the user.
-
-}
-
-The recommended input for this function is data pre-processed with the HSP
-software package \insertCite{Lang2013}{rcaiman}. Please, refer to
-\code{\link{write_sky_points}} for additional details about HSP and refer to
-\code{\link{fit_cie_sky_model}} and \code{\link{interpolate_sky_points}} to
-know why the HSP pre-processing is convenient.
-
-
-Providing a \code{filling source} triggers an alternative pipeline in which
-the sky is fully reconstructed with \code{\link{interpolate_sky_points}}
-after a dense sampling (\eqn{1 \times 1} degree cells), which is supported by
-the fact that sky digital numbers will be available for almost every pixel,
-either from \code{r} gaps or from the filling source--an exception is a
-filling source with plenty of \code{NA} values, which should not be provided.
+Providing a \verb{filling source} triggers an alternative pipeline in which the
+sky is fully reconstructed with \code{\link[=interpolate_sky_points]{interpolate_sky_points()}} after a dense
+sampling (\eqn{1 \times 1} degree cells), which is supported by the fact that
+sky digital numbers will be available for every pixel, either from \code{r} gaps
+or from the filling source.
 }
 \examples{
 \dontrun{
-#JPEG file
 caim <- read_caim()
-z <- zenith_image(ncol(caim), lens("Nikon_FCE9"))
+z <- zenith_image(ncol(caim), lens())
 a <- azimuth_image(z)
-r <- gbc(caim$Blue)
-bin <- ootb_obia(caim \%>\% normalize(), z, a)
-bin <- bin & mask_hs(z, 0, 85)
-sky <- ootb_sky_reconstruction(r, z, a, bin)
-sky <- normalize(sky, 0, 1, TRUE)
-plot(sky)
-sky <- ootb_sky_reconstruction(r, z, a, bin, sky)
+m <- !is.na(z)
 
-ratio <- r/sky
-plot(ratio)
-hist(ratio)
-ratio <- normalize(ratio, 0, 1, TRUE)
-g <- sky_grid_segmentation(z, a, 10)
-plot(defuzzify(ratio, g))
+m <- !is.na(z)
+mn <- quantile(caim$Blue[m], 0.01)
+mx <- quantile(caim$Blue[m], 0.99)
+r <- normalize(caim$Blue, mn, mx, TRUE)
 
-
-#preprocessed with HSP
-path <- system.file("external/DSCN6342.pgm", package = "rcaiman")
-r <- read_caim(path) \%>\% normalize()
-z <- zenith_image(ncol(r), lens())
-a <- azimuth_image(z)
 bin <- find_sky_pixels(r, z, a)
+bin <- ootb_mblt(r, z, a, bin)
+plot(bin$bin)
+
+mx <- optim_normalize(caim, m)
+
+r <- normalize(caim$Blue)
+caim <- normalize(caim, mx = mx, force_range = TRUE)
+
+bin <- ootb_obia(caim, z, a, m, HSV(239, 0.85, 0.5), gamma = NULL)
+plot(bin)
+bin <- ootb_mblt(r, z, a, bin)$bin
+plot(bin)
+
+set.seed(7)
 sky <- ootb_sky_reconstruction(r, z, a, bin)
-bin <- apply_thr(r/sky, 0.5)
-sky <- ootb_sky_reconstruction(r, z, a, bin, sky)
-ratio <- r/sky
-ratio[is.na(ratio)] <- 0
-ratio <- normalize(ratio, 0, 1, force_range = TRUE)
-plot(ratio)
-g <- sky_grid_segmentation(z, a, 10)
-plot(defuzzify(ratio, g))
+
+sky$sky
+sky$validation \%>\% summary()
+plot(sky$sky)
+plot(r/sky$sky)
+hist(r/sky$sky, xlim = c(0, 2), breaks = 255)
+hist((r/sky$sky)[bin], xlim = c(0, 2), breaks = 255)
+plot((r/sky$sky)>1.1)
+
+plot(sky$bin)
+
+sky2 <- ootb_sky_reconstruction(r, z, a, sky$bin, sky$sky)
+plot(sky2)
+plot(r/sky2)
+hist(r/sky2, xlim = c(0, 2), breaks = 255)
+hist((r/sky2)[sky$bin], xlim = c(0, 2), breaks = 255)
+plot((r/sky2)>1.1)
 }
 }
 \references{

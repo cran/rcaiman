@@ -7,38 +7,41 @@
 membership_to_color(caim, target_color, sigma = NULL)
 }
 \arguments{
-\item{caim}{\linkS4class{SpatRaster}. The return of a call to
-\code{\link{read_caim}}.}
+\item{caim}{\linkS4class{SpatRaster}. The return of a call to \code{\link[=read_caim]{read_caim()}} or
+\code{\link[=read_caim_raw]{read_caim_raw()}}.}
 
 \item{target_color}{\linkS4class{color}.}
 
-\item{sigma}{Numeric vector of length one. Use \code{NULL} (default) to
-estimate it automatically as the euclidean distance between
-\code{target_color} and grey in the \emph{CIE L*a*b*} color space.}
+\item{sigma}{Numeric vector of length one. Use \code{NULL} (default) to estimate
+it automatically as the euclidean distance between \code{target_color} and grey
+in the \emph{CIE LAB} color space.}
 }
 \value{
-It returns an object from the class \linkS4class{SpatRaster}. First
-  layer is the membership to the target color. Second layer is the membership
-  to grey. Both memberships are calculated with same \code{sigma}.
+It returns an object from the class \linkS4class{SpatRaster}. First layer
+is the membership to the target color. Second layer is the membership to
+grey. Both memberships are calculated with same \code{sigma}.
 }
 \description{
 This function was first presented in \insertCite{Diaz2015;textual}{rcaiman}.
-It computes the degree of membership to a color with two Gaussian membership
-functions and the dimensions \emph{a*} and \emph{b*} from the
-\emph{CIE L*a*b*} color space. To be clear, the lightness dimension is not
+It computes the degree of membership to a color using two Gaussian membership
+functions and the axes \emph{A} and \emph{B} from the
+\emph{CIE LAB} color space. The lightness dimension is not
 considered in the calculations.
 }
 \details{
 If you use this function in your research, please cite
-\insertCite{Diaz2015;textual}{rcaiman} in addition to this package.
+\insertCite{Diaz2015;textual}{rcaiman} in addition to this package
+(\verb{citation("rcaiman"}).
 }
 \examples{
 \dontrun{
-caim <- read_caim()
-plot(caim)
-caim <- normalize(caim, 0, 255)
-z <- zenith_image(ncol(caim), lens("Nikon_FCE9"))
-mem <- membership_to_color(caim, sRGB(0.25, 0.75, 0))
+caim <- read_caim() \%>\% normalize
+z <- zenith_image(ncol(caim), lens())
+a <- azimuth_image(z)
+m <- !is.na(z)
+
+sky_blue <- HSV(239, 0.85, 0.5)
+mem <- membership_to_color(caim, sky_blue)
 plot(mem)
 }
 }

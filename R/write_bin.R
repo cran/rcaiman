@@ -1,8 +1,8 @@
 #' Write binarized images
 #'
-#' Wrapper functions for \code{\link[terra]{writeRaster}}.
+#' Wrapper functions for [terra::writeRaster()].
 #'
-#' @param bin \linkS4class{SpatRaster}.
+#' @param bin [SpatRaster-class].
 #' @inheritParams write_caim
 #'
 #' @export

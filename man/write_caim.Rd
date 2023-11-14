@@ -17,25 +17,36 @@ write_caim(caim, path, bit_depth)
 No return value. Called for side effects.
 }
 \description{
-Wrapper function for \code{\link[terra]{writeRaster}}.
+Wrapper function for \code{\link[terra:writeRaster]{terra::writeRaster()}}.
 }
 \examples{
 \dontrun{
 caim <- read_caim() \%>\% normalize(., 0, 255)
-write_caim(caim * 2^8, file.path(tempdir(), "test_8bit"), 8)
-write_caim(caim * 2^16, file.path(tempdir(), "test_16bit"), 16)
+write_caim(caim * 2^8-2, file.path(tempdir(), "test_8bit"), 8)
+write_caim(caim * 2^16-2, file.path(tempdir(), "test_16bit"), 16)
+# Note: the normalized values are scaled by multiplying by 2^bit_depth-2
+# to avoid storing in the maximum bin because those values will be
+# interpreted as NA by read_caim(), and that is undesired.
 }
 }
 \seealso{
 Other Tool Functions: 
 \code{\link{colorfulness}()},
+\code{\link{correct_vignetting}()},
 \code{\link{defuzzify}()},
 \code{\link{extract_dn}()},
 \code{\link{extract_feature}()},
 \code{\link{extract_rl}()},
+\code{\link{extract_sky_points_simple}()},
 \code{\link{extract_sky_points}()},
+\code{\link{extract_sun_coord}()},
+\code{\link{find_sky_pixels_nonnull}()},
+\code{\link{find_sky_pixels}()},
 \code{\link{masking}()},
+\code{\link{optim_normalize}()},
+\code{\link{percentage_of_clipped_highlights}()},
 \code{\link{read_bin}()},
+\code{\link{read_caim_raw}()},
 \code{\link{read_caim}()},
 \code{\link{write_bin}()}
 }

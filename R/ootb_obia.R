@@ -4,68 +4,77 @@
 #' \insertCite{Diaz2015;textual}{rcaiman}.
 #'
 #' This function is a hard-coded version of a pipeline that combines these main
-#' functions \code{\link{mask_sunlit_canopy}}, \code{\link{enhance_caim}},
-#' \code{\link{polar_qtree}}/\code{\link{qtree}}, and \code{\link{obia}}. The
-#' code can be easily inspected by calling \code{ootb_obia} --no parenthesis.
-#' Advanced users can use that code as a template.
+#' functions [mask_sunlit_canopy()], [enhance_caim()],
+#' [polar_qtree()]/[qtree()], and [obia()]. The code can be easily inspected by
+#' calling `ootb_obia` --no parenthesis. Advanced users can use that code as a
+#' template.
 #'
-#' Pixels from the synthetic layer returned by \code{\link{obia}} that lay
-#' between \code{0} and \code{1} are assigned to the class \emph{plant} only if
-#' they are:
+#' Pixels from the synthetic layer returned by [obia()] that lay between `0` and
+#' `1` are assigned to the class *plant* only if they comply with the following
+#' conditions:
 #'
-#' \itemize{
+#' * Their values are equal to `0` after [defuzzify()] with a
+#' sky grid segmentation of `10` degrees.
+#' * Their values are equal to `0` after [apply_thr()] with a
+#' threshold computed with [thr_isodata()].
+#' * They are not exclusively surrounded by sky pixels.
 #'
-#' \item \code{0} after \code{\link{defuzzify}} with a sky grid segmentation of
-#' \code{10} degrees.
-#'
-#' \item \code{0} after \code{\link{apply_thr}} with a threshold computed with
-#' \code{\link{thr_isodata}}.
-#'
-#' \item Not exclusively surrounded by sky pixels.
-#'
-#' }
-#'
-#' Default values of \code{z} and \code{a} allows the processing of restricted
-#' view photographs.
+#' Use the default values of `z` and `a` to process restricted view photographs.
 #'
 #' If you use this function in your research, please cite
-#' \insertCite{Diaz2015;textual}{rcaiman} or \insertCite{Diaz2023}{rcaiman} in
-#' addition to this package.
+#' \insertCite{Diaz2015;textual}{rcaiman} or
+#' \insertCite{Diaz2023;textual}{rcaiman} in addition to this package
+#' (`citation("rcaiman"`).
 #'
 #' @inheritParams enhance_caim
 #' @inheritParams ootb_mblt
-#' @param m \linkS4class{SpatRaster}. Default (\code{NULL}) is the equivalent to
-#'   enter \code{!is.na(z)} for hemispherical photography, or enter
-#'   \code{!is.na(caim$Red)} for restricted view photography.
+#' @param m [SpatRaster-class]. Default (`NULL`) is the equivalent to enter
+#'   `!is.na(z)` for hemispherical photography, or enter `!is.na(caim$Red)` for
+#'   restricted view photography.
 #'
-#' @return An object of class \linkS4class{SpatRaster} with values \code{0} and
-#'   \code{1}.
+#' @return An object of class [SpatRaster-class] with values `0` and `1`.
 #'
 #'
 #' @family Binarization Functions
 #' @export
 #'
+#' @references \insertAllCited{}
+#'
 #' @examples
 #' \dontrun{
-#' #circular hemispherical photo
-#' path <- system.file("external/b4_2_5724.jpg", package = "rcaiman")
-#' caim <- read_caim(path, c(1280, 960) - 745, 745 * 2, 745 * 2) %>%
-#'   normalize()
-#' z <- zenith_image(1490, lens("Nikon_FCE9"))
+#' # ==============================================
+#' # Circular Hemispherical Photo (from a raw file)
+#' # ==============================================
+#'
+#' caim <- read_caim()
+#' z <- zenith_image(ncol(caim), lens())
 #' a <- azimuth_image(z)
+#' m <- !is.na(z)
 #'
-#' bin <- ootb_obia(caim, z, a)
-#' plot(bin)
+#' mn <- quantile(caim$Blue[m], 0.01)
+#' mx <- quantile(caim$Blue[m], 0.99)
+#' r <- normalize(caim$Blue, mn, mx, TRUE)
 #'
-#' ## to compare
-#' blue <- gbc(caim$Blue*255)
-#' plot(apply_thr(blue, thr_isodata(blue[!is.na(z)])))
-#' plot(blue, col = seq(0,1,1/255) %>% grey())
+#' bin <- find_sky_pixels(r, z, a)
+#' mblt <- ootb_mblt(r, z, a, bin)
+#' plot(mblt$bin)
 #'
-#' #hemispherical photo from a smartphone
+#' mx <- optim_normalize(caim, mblt$bin)
+#' ncaim <- normalize(caim, mx = mx, force_range = TRUE)
+#' plotRGB(ncaim*255)
+#' plotRGB(normalize(caim)*255)
+#' percentage_of_clipped_highlights(ncaim$Blue, m)
+#'
+#' bin2 <- ootb_obia(ncaim, z, a, gamma = NULL)
+#' plot(bin2)
+#'
+#' # =====================================
+#' # Hemispherical Photo from a Smartphone
+#' # =====================================
+#'
 #' path <- system.file("external/APC_0581.jpg", package = "rcaiman")
 #' caim <- read_caim(path) %>% normalize()
-#' z <- zenith_image(2132/2, lens("Olloclip"))
+#' z <- zenith_image(2132/2, c(0.7836, 0.1512, -0.1558))
 #' a <- azimuth_image(z)
 #' zenith_colrow <- c(1063, 771)/2
 #' caim <- expand_noncircular(caim, z, zenith_colrow) %>% normalize()
@@ -75,25 +84,18 @@
 #' bin <- ootb_obia(caim, z, a)
 #' plot(bin)
 #'
-#' ## to compare
-#' blue <- gbc(caim$Blue*255)
-#' plot(apply_thr(blue, thr_isodata(blue[m])))
-#' plot(blue, col = seq(0,1,1/255) %>% grey())
+#' # ============================
+#' # Restricted View Canopy Photo
+#' # ============================
 #'
-#' #restricted view canopy photo
 #' path <- system.file("external/APC_0020.jpg", package = "rcaiman")
 #' caim <- read_caim(path) %>% normalize()
 #'
 #' bin <- ootb_obia(caim)
 #' plot(bin)
-#'
-#' ## to compare
-#' blue <- gbc(caim$Blue*255)
-#' plot(apply_thr(blue, thr_isodata(blue[])))
-#' plot(blue, col = seq(0,1,1/255) %>% grey())
 #' }
 ootb_obia <- function(caim, z = NULL, a = NULL, m = NULL,
-                      sky_blue = NULL, gamma = 2.2) {
+                      sky_blue = NULL, w_red = 0, gamma = 2.2) {
 
   if (is.null(m)) {
     if (is.null(z)) {
@@ -103,11 +105,16 @@ ootb_obia <- function(caim, z = NULL, a = NULL, m = NULL,
     }
   }
 
-  m2 <- !mask_sunlit_canopy(caim, m) & m
   ecaim <- enhance_caim(caim, m, sky_blue = sky_blue,
-                        w_red = 0, gamma = gamma, thr = NULL,
+                        w_red = w_red, gamma = gamma, thr = NULL,
                         fuzziness = NULL)
-  bin <- apply_thr(ecaim, thr_isodata(ecaim[m2]))
+  if (is.null(gamma)) {
+    bin <- apply_thr(ecaim, thr_isodata(ecaim[m]))
+  } else {
+    m2 <- !mask_sunlit_canopy(caim, m) & m
+    bin <- apply_thr(ecaim, thr_isodata(ecaim[m2]))
+  }
+
 
   if (is.null(z)) {
     seg <- qtree(caim, scale_parameter = 0.2)
@@ -119,16 +126,11 @@ ootb_obia <- function(caim, z = NULL, a = NULL, m = NULL,
     g <- sky_grid_segmentation(z, a, 10)
   }
 
-  # if (colorfulness(caim, bin) > 5) {
-  #   blue_sky <- mask_blue_sky(caim, m)
-  #   sky_points <- extract_sky_points(ecaim, blue_sky, g)
-  #   sky_blue <- extract_dn(caim, sky_points, fun = mean)
-  # }
-  # ecaim <- enhance_caim(caim, bin, sky_blue = sky_blue,
-  #                       w_red = 0, gamma = gamma, thr = NULL,
-  #                       fuzziness = NULL)
-
-  bin <- apply_thr(ecaim, thr_isodata(ecaim[m2]))
+  if (is.null(gamma)) {
+    bin <- apply_thr(ecaim, thr_isodata(ecaim[m]))
+  } else {
+    bin <- apply_thr(ecaim, thr_isodata(ecaim[m2]))
+  }
 
   if (is.null(gamma)) {
     r <- caim$Blue
